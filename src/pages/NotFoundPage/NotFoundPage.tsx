@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import { buttonVariants } from '@/components/ui/button'
-import { ROUTES } from '@/utils/constants/routes'
+import { ROUTES } from '@/constants/routes'
 import { cn } from '@/lib/utils'
 
 /**

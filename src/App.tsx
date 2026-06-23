@@ -1,18 +1,15 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import { AppLayout } from '@/components/layout/AppLayout'
-import { HomePage } from '@/pages/HomePage/HomePage'
-import { ProductsPage } from '@/pages/ProductsPage/ProductsPage'
-import { ProductDetailPage } from '@/pages/ProductDetailPage/ProductDetailPage'
-import { CartPage } from '@/pages/CartPage/CartPage'
-import { FavoritesPage } from '@/pages/FavoritesPage/FavoritesPage'
-import { UserPage } from '@/pages/UserPage/UserPage'
-import { NotFoundPage } from '@/pages/NotFoundPage/NotFoundPage'
-import { ROUTES } from '@/utils/constants/routes'
+import { ROUTES } from '@/constants/routes'
+import { CartPage } from '@/pages/CartPage'
+import { FavoritesPage } from '@/pages/FavoritesPage'
+import { HomePage } from '@/pages/HomePage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
+import { ProductDetailPage } from '@/pages/ProductDetailPage'
+import { ProductsPage } from '@/pages/ProductsPage'
+import { UserPage } from '@/pages/UserPage'
 
-/**
- * Корневой компонент приложения с маршрутизацией.
- */
 const App = () => {
   return (
     <BrowserRouter>
@@ -24,7 +21,7 @@ const App = () => {
           <Route path={ROUTES.CART} element={<CartPage />} />
           <Route path={ROUTES.FAVORITES} element={<FavoritesPage />} />
           <Route path={ROUTES.USER} element={<UserPage />} />
-          <Route path="/404" element={<NotFoundPage />} />
+          <Route path={ROUTES.NOT_FOUND} element={<NotFoundPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>

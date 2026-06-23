@@ -3,9 +3,9 @@ import { Heart } from 'lucide-react'
 
 import { ProductCard } from '@/components/product/ProductCard'
 import { EmptyState } from '@/components/product/EmptyState'
-import { products } from '@/utils/data/products'
-import { ROUTES } from '@/utils/constants/routes'
-import { useFavorites } from '@/utils/hooks/useFavorites'
+import { products } from '@/data/products'
+import { ROUTES } from '@/constants/routes'
+import { useFavorites } from '@/hooks/useFavorites'
 
 /**
  * Страница избранных товаров.
@@ -38,9 +38,9 @@ export const FavoritesPage = () => {
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
         {favoriteProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.id} product={product} variant="compact" />
         ))}
       </div>
     </div>

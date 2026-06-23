@@ -3,9 +3,9 @@ import { Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { QuantityControl } from '@/components/product/QuantityControl'
-import { formatPrice } from '@/utils/helpers/catalog'
-import { getProductRoute } from '@/utils/constants/routes'
-import type { Product } from '@/utils/types/product'
+import { formatPrice } from '@/lib/catalog'
+import { getProductRoute } from '@/constants/routes'
+import type { Product } from '@/types'
 
 type CartItemRowProps = {
   /** Данные товара */

@@ -4,7 +4,7 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { ProductFilter } from '@/components/product/ProductFilter'
 import { EmptyState } from '@/components/product/EmptyState'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useProductFilters } from '@/utils/hooks/useProductFilters'
+import { useProductFilters } from '@/hooks/useProductFilters'
 
 /**
  * Страница каталога товаров с фильтрацией.

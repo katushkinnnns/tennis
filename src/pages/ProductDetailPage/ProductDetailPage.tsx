@@ -17,13 +17,13 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Separator } from '@/components/ui/separator'
-import { formatPrice, getProductById } from '@/utils/helpers/catalog'
-import { ROUTES } from '@/utils/constants/routes'
-import { products } from '@/utils/data/products'
-import { useCart } from '@/utils/hooks/useCart'
-import { useFavorites } from '@/utils/hooks/useFavorites'
-import { useRatingsStore } from '@/utils/store/ratingsStore'
-import type { ProductRating } from '@/utils/types/product'
+import { formatPrice, getProductById } from '@/lib/catalog'
+import { ROUTES } from '@/constants/routes'
+import { products } from '@/data/products'
+import { useCart } from '@/hooks/useCart'
+import { useFavorites } from '@/hooks/useFavorites'
+import { useRatings } from '@/hooks/useRatings'
+import type { ProductRating } from '@/types'
 import { cn } from '@/lib/utils'
 
 /**
@@ -35,11 +35,11 @@ export const ProductDetailPage = () => {
   const [quantity, setQuantity] = useState(1)
   const { addItem } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
-  const userRating = useRatingsStore((state) => (id ? state.getRating(id) : undefined))
-  const setRating = useRatingsStore((state) => state.setRating)
+  const { getRating, setRating } = useRatings()
+  const userRating = id ? getRating(id) : undefined
 
   if (!product) {
-    return <Navigate to="/404" replace />
+    return <Navigate to={ROUTES.NOT_FOUND} replace />
   }
 
   const favorite = isFavorite(product.id)

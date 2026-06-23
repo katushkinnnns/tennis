@@ -7,27 +7,30 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { RatingStars } from '@/components/product/RatingStars'
-import { formatPrice } from '@/utils/helpers/catalog'
-import { getProductRoute } from '@/utils/constants/routes'
-import { useCart } from '@/utils/hooks/useCart'
-import { useFavorites } from '@/utils/hooks/useFavorites'
-import type { Product } from '@/utils/types/product'
+import { formatPrice } from '@/lib/catalog'
+import { getProductRoute } from '@/constants/routes'
+import { useCart } from '@/hooks/useCart'
+import { useFavorites } from '@/hooks/useFavorites'
+import type { Product } from '@/types'
 import { cn } from '@/lib/utils'
 
 type ProductCardProps = {
   /** Данные товара */
   product: Product
+  /** Компактный вид — для избранного и узких списков */
+  variant?: 'default' | 'compact'
 }
 
 /**
  * Карточка товара для каталога и избранного.
  * @param props - Пропсы ProductCard.
  */
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, variant = 'default' }: ProductCardProps) => {
   const { addItem } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
   const [imageError, setImageError] = useState(false)
   const favorite = isFavorite(product.id)
+  const isCompact = variant === 'compact'
 
   const handleAddToCart = () => {
     addItem(product.id)
@@ -44,12 +47,20 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   return (
     <Card className="flex h-full flex-col transition-shadow hover:shadow-md">
       <Link to={getProductRoute(product.id)} aria-label={`Подробнее о ${product.name}`}>
-        <div className="relative aspect-square overflow-hidden bg-muted">
+        <div
+          className={cn(
+            'relative overflow-hidden bg-white',
+            isCompact ? 'aspect-[4/3]' : 'aspect-square',
+          )}
+        >
           {!imageError ? (
             <img
               src={product.images[0]}
               alt={product.name}
-              className="size-full object-cover transition-transform hover:scale-105"
+              className={cn(
+                'size-full object-contain transition-transform hover:scale-105',
+                isCompact ? 'p-2' : 'p-3',
+              )}
               onError={() => setImageError(true)}
               loading="lazy"
             />
@@ -59,49 +70,56 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </div>
           )}
           {!product.inStock && (
-            <Badge variant="secondary" className="absolute top-2 left-2">
+            <Badge variant="secondary" className="absolute top-2 left-2 text-xs">
               Нет в наличии
             </Badge>
           )}
         </div>
       </Link>
 
-      <CardHeader className="flex-1">
-        <CardTitle className="line-clamp-2 text-base">
+      <CardHeader className={cn('flex-1', isCompact && 'gap-2 px-4 py-3')}>
+        <CardTitle className={cn('line-clamp-2', isCompact ? 'text-sm' : 'text-base')}>
           <Link to={getProductRoute(product.id)} className="hover:text-primary">
             {product.name}
           </Link>
         </CardTitle>
-        <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-primary">{formatPrice(product.price)}</span>
-          <RatingStars value={product.rating} readOnly />
+        <div className="flex items-center justify-between gap-2">
+          <span className={cn('font-bold text-primary', isCompact ? 'text-base' : 'text-lg')}>
+            {formatPrice(product.price)}
+          </span>
+          <RatingStars
+            value={product.rating}
+            readOnly
+            className={isCompact ? '[&_svg]:size-3.5 [&_button]:p-0' : undefined}
+          />
         </div>
       </CardHeader>
 
-      <CardContent className="pb-0">
+      <CardContent className={cn('pb-0', isCompact && 'px-4 py-0')}>
         <p className="text-xs text-muted-foreground">
           {product.brand} · {product.category}
         </p>
       </CardContent>
 
-      <CardFooter className="gap-2 border-t-0 bg-transparent">
+      <CardFooter className={cn('gap-2 border-t-0 bg-transparent', isCompact && 'px-4 py-3')}>
         <Button
           className="flex-1"
+          size={isCompact ? 'sm' : 'default'}
           onClick={handleAddToCart}
           disabled={!product.inStock}
           aria-label={`Добавить ${product.name} в корзину`}
         >
-          <ShoppingCart className="size-4" />
+          <ShoppingCart className={cn(isCompact ? 'size-3.5' : 'size-4')} />
           В корзину
         </Button>
         <Button
           variant="outline"
           size="icon"
+          className={cn(favorite && 'text-red-500', isCompact && 'size-8')}
           onClick={handleToggleFavorite}
           aria-label={favorite ? 'Убрать из избранного' : 'Добавить в избранное'}
-          className={cn(favorite && 'text-red-500')}
         >
-          <Heart className={cn('size-4', favorite && 'fill-current')} />
+          <Heart className={cn(isCompact ? 'size-3.5' : 'size-4', favorite && 'fill-current')} />
         </Button>
       </CardFooter>
     </Card>

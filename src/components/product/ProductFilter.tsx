@@ -1,7 +1,7 @@
-import type { ProductFilters } from '@/utils/types/product'
-import { catalogMaxPrice, catalogMinPrice } from '@/utils/data/products'
-import { getUniqueFieldValues } from '@/utils/helpers/catalog'
-import { useProducts } from '@/utils/hooks/useProducts'
+import type { ProductFilters } from '@/types'
+import { catalogMaxPrice, catalogMinPrice } from '@/data/products'
+import { getUniqueFieldValues } from '@/lib/catalog'
+import { useProducts } from '@/hooks/useProducts'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -109,7 +109,7 @@ export const ProductFilter = ({ filters, onChange, onReset }: ProductFilterProps
         </div>
 
         <div className="space-y-3">
-          <Label>
+          <Label className="font-medium">
             Цена: {filters.minPrice.toLocaleString('ru-RU')} —{' '}
             {filters.maxPrice.toLocaleString('ru-RU')} ₽
           </Label>

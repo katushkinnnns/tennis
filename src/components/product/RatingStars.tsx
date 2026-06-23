@@ -1,7 +1,7 @@
 import { Star } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import type { ProductRating } from '@/utils/types/product'
+import type { ProductRating } from '@/types'
 
 type RatingStarsProps = {
   /** Текущее значение рейтинга (0 — не оценено) */

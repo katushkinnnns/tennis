@@ -6,9 +6,9 @@ import { EmptyState } from '@/components/product/EmptyState'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { formatPrice } from '@/utils/helpers/catalog'
-import { ROUTES } from '@/utils/constants/routes'
-import { useCart } from '@/utils/hooks/useCart'
+import { formatPrice } from '@/lib/catalog'
+import { ROUTES } from '@/constants/routes'
+import { useCart } from '@/hooks/useCart'
 
 /**
  * Страница корзины с товарами и итоговой суммой.

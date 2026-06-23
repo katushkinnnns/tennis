@@ -15,7 +15,9 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { useUserStore } from '@/utils/store/userStore'
+import { PROFILE_HEADER_SLOGAN, PROFILE_HEADER_SLOGAN_PARTS } from '@/constants/branding'
+import { useUserStore } from '@/stores/userStore'
+import { cn } from '@/lib/utils'
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'Имя должно содержать минимум 2 символа' }),
@@ -55,12 +57,31 @@ export const UserPage = () => {
 
   return (
     <div className="mx-auto max-w-lg space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Профиль</h1>
-        <p className="mt-1 text-muted-foreground">
+      <section
+        className={cn(
+          'rounded-2xl border neon-border bg-gradient-to-br',
+          'from-[color-mix(in_oklch,var(--neon-green-light)_12%,white)] via-background',
+          'to-[color-mix(in_oklch,var(--neon-green-deep)_8%,white)] px-6 py-8',
+        )}
+      >
+        <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
+          Профиль
+        </p>
+        <h1
+          className="mt-2 text-2xl font-black tracking-wide sm:text-3xl"
+          aria-label={PROFILE_HEADER_SLOGAN}
+        >
+          {PROFILE_HEADER_SLOGAN_PARTS.map((part, index) => (
+            <span key={part.text}>
+              {index > 0 && ' '}
+              <span className={part.className}>{part.text}</span>
+            </span>
+          ))}
+        </h1>
+        <p className="mt-3 text-muted-foreground">
           Управляйте личными данными. Информация сохраняется локально.
         </p>
-      </div>
+      </section>
 
       <Card>
         <CardHeader>
