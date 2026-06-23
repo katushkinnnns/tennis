@@ -60,8 +60,8 @@ export const UserPage = () => {
       <section
         className={cn(
           'rounded-2xl border neon-border bg-gradient-to-br',
-          'from-[color-mix(in_oklch,var(--neon-green-light)_12%,white)] via-background',
-          'to-[color-mix(in_oklch,var(--neon-green-deep)_8%,white)] px-6 py-8',
+          'from-[color-mix(in_oklch,var(--neon-green-light)_12%,var(--background))] via-background',
+          'to-[color-mix(in_oklch,var(--neon-green-deep)_8%,var(--background))] px-6 py-8',
         )}
       >
         <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">

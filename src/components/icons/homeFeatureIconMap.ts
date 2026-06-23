@@ -1,22 +1,20 @@
-import type { ComponentType, SVGProps } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import {
+  CreditCard,
+  Headphones,
+  LayoutGrid,
+  ShieldCheck,
+  Truck,
+  UserRoundSearch,
+} from 'lucide-react'
 
 import type { HomeFeatureIconId } from '@/data/homePageContent'
-import {
-  AssortmentIcon,
-  DeliveryIcon,
-  ExpertIcon,
-  PaymentIcon,
-  QualityIcon,
-  SupportIcon,
-} from '@/components/icons/FeatureIcons'
 
-type FeatureIconComponent = ComponentType<SVGProps<SVGSVGElement>>
-
-export const homeFeatureIconMap: Record<HomeFeatureIconId, FeatureIconComponent> = {
-  assortment: AssortmentIcon,
-  delivery: DeliveryIcon,
-  quality: QualityIcon,
-  expert: ExpertIcon,
-  payment: PaymentIcon,
-  support: SupportIcon,
+export const homeFeatureIconMap: Record<HomeFeatureIconId, LucideIcon> = {
+  assortment: LayoutGrid,
+  delivery: Truck,
+  quality: ShieldCheck,
+  expert: UserRoundSearch,
+  payment: CreditCard,
+  support: Headphones,
 }

@@ -4,24 +4,5 @@ export const STORAGE_KEYS = {
   FAVORITES: 'tennis-boom-favorites',
   USER: 'tennis-boom-user',
   RATINGS: 'tennis-boom-ratings',
+  THEME: 'tennis-boom-theme',
 } as const
-
-/** Категории товаров */
-export const CATEGORIES = [
-  'Ракетки',
-  'Мячи',
-  'Одежда',
-  'Обувь',
-  'Аксессуары',
-] as const
-
-/** Бренды товаров */
-export const BRANDS = [
-  'Wilson',
-  'Head',
-  'Babolat',
-  'Nike',
-  'Adidas',
-  'Yonex',
-  'Asics',
-] as const

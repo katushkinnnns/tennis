@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Heart, ShoppingCart, User } from 'lucide-react'
 
 import { Logo } from '@/components/layout/Logo'
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { STORE_NAME } from '@/constants/branding'
@@ -59,6 +60,7 @@ export const Header = () => {
               )}
             </Link>
           ))}
+          <ThemeToggle />
         </nav>
       </div>
     </header>

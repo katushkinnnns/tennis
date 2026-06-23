@@ -1,5 +1,3 @@
-export const APP_SLUG = 'vibe-boom-tennis' as const
-
 export const STORE_NAME = 'Vibe Boom Tennis'
 
 export const STORE_SLOGAN = 'Лови vibe. Твори boom'

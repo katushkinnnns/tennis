@@ -3,11 +3,14 @@ import { Outlet } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
+import { useTheme } from '@/hooks/useTheme'
 
 /**
  * Общий layout приложения с шапкой, контентом и подвалом.
  */
 export const AppLayout = () => {
+  useTheme()
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

@@ -49,7 +49,7 @@ export const ProductCard = ({ product, variant = 'default' }: ProductCardProps) 
       <Link to={getProductRoute(product.id)} aria-label={`Подробнее о ${product.name}`}>
         <div
           className={cn(
-            'relative overflow-hidden bg-white',
+            'relative overflow-hidden bg-card',
             isCompact ? 'aspect-[4/3]' : 'aspect-square',
           )}
         >

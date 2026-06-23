@@ -31,7 +31,7 @@ const SectionHeading = ({ title, subtitle, className }: SectionHeadingProps) => 
 export const HomePage = () => {
   return (
     <div className="space-y-20 pb-4">
-      <section className="relative overflow-hidden rounded-2xl border neon-border bg-gradient-to-br from-[color-mix(in_oklch,var(--neon-green-light)_14%,white)] via-background to-[color-mix(in_oklch,var(--neon-green-deep)_8%,white)] px-6 py-16 sm:px-12 sm:py-24">
+      <section className="relative overflow-hidden rounded-2xl border neon-border bg-gradient-to-br from-[color-mix(in_oklch,var(--neon-green-light)_14%,var(--background))] via-background to-[color-mix(in_oklch,var(--neon-green-deep)_8%,var(--background))] px-6 py-16 sm:px-12 sm:py-24">
           <div
             className="pointer-events-none absolute -top-16 right-0 size-48 rounded-full bg-[color-mix(in_oklch,var(--neon-green-light)_12%,transparent)] blur-3xl"
             aria-hidden="true"
@@ -116,7 +116,7 @@ export const HomePage = () => {
             <Card key={title} className="group neon-border transition-shadow hover:neon-glow-soft">
               <CardHeader>
                 <FeatureIconBadge>
-                  <Icon />
+                  <Icon className="size-8 text-primary" strokeWidth={1.75} aria-hidden="true" />
                 </FeatureIconBadge>
                 <CardTitle>{title}</CardTitle>
               </CardHeader>
@@ -130,7 +130,7 @@ export const HomePage = () => {
         </div>
       </section>
 
-      <section className="rounded-2xl border neon-border bg-gradient-to-br from-[color-mix(in_oklch,var(--neon-green-light)_10%,white)] to-[color-mix(in_oklch,var(--neon-green-deep)_6%,white)] px-6 py-12 text-center sm:px-12">
+      <section className="rounded-2xl border neon-border bg-gradient-to-br from-[color-mix(in_oklch,var(--neon-green-light)_10%,var(--background))] to-[color-mix(in_oklch,var(--neon-green-deep)_6%,var(--background))] px-6 py-12 text-center sm:px-12">
         <p className="text-xl font-black sm:text-2xl" aria-label={CTA_SLOGAN}>
           {CTA_SLOGAN_PARTS.map((part, index) => (
             <span key={part.text}>

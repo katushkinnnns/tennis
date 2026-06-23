@@ -29,7 +29,7 @@
 
 ## Обзор
 
-**Vibe Boom Tennis** — клиентское React-приложение без бэкенда. Каталог товаров, корзина, избранное, пользовательские оценки и профиль работают полностью в браузере. Данные о товарах хранятся в статическом TypeScript-модуле; пользовательские данные сохраняются в `localStorage` через Zustand persist.
+**Vibe Boom Tennis** — клиентское React-приложение без бэкенда. Каталог товаров, корзина, избранное, пользовательские оценки и профиль работают полностью в браузере. Каталог собирается на этапе сборки из папок `src/content/products/`; пользовательские данные сохраняются в `localStorage` через Zustand persist.
 
 ### Ключевые возможности
 
@@ -47,7 +47,6 @@
 
 - Нет серверного API — заказ оформить нельзя, только просмотр корзины.
 - Нет аутентификации — профиль локальный.
-- Изображения товаров загружаются с внешних CDN (Tennis Warehouse).
 - Рейтинг товара в каталоге — статический; пользовательская оценка влияет только на странице детали.
 
 ---
@@ -116,16 +115,20 @@ npm run lint
 
 ```
 tennis_boom/
-├── public/                    # Статические файлы (без обработки Vite)
-│   ├── logo.png               # Логотип магазина
-│   ├── brands/                # Логотипы брендов (Wilson, Head, …)
-│   └── products/              # Локальные изображения (при необходимости)
-├── documents/                 # Документация проекта
+├── public/
+│   └── logo.png               # Логотип магазина (favicon + компонент Logo)
+├── documents/
 │   └── PROJECT_DOCUMENTATION.md
 ├── src/
-│   ├── main.tsx               # Точка входа React
-│   ├── App.tsx                # Маршрутизация
-│   ├── index.css              # Глобальные стили, тема, neon-эффекты
+│   ├── main.tsx
+│   ├── App.tsx
+│   ├── index.css
+│   │
+│   ├── content/               # Контент товаров (источник каталога)
+│   │   └── products/
+│   │       └── {slug}/
+│   │           ├── product.json
+│   │           └── *.jpg      # Изображения товара
 │   │
 │   ├── pages/                 # Страницы (feature-based)
 │   │   ├── HomePage/
@@ -137,31 +140,30 @@ tennis_boom/
 │   │   └── NotFoundPage/
 │   │
 │   ├── components/
-│   │   ├── layout/            # AppLayout, Header, Footer, Logo, …
+│   │   ├── layout/            # AppLayout, Header, Footer, Logo, StoreName
 │   │   ├── product/           # ProductCard, ProductFilter, CartItemRow, …
 │   │   ├── icons/             # Иконки преимуществ на главной
-│   │   └── ui/                # shadcn/ui примитивы (Button, Card, Form, …)
+│   │   └── ui/                # shadcn/ui примитивы
 │   │
 │   ├── hooks/                 # Обёртки над сторами и бизнес-логикой
-│   ├── stores/                # Zustand-сторы (cart, favorites, ratings, user)
-│   ├── data/                  # Статические данные (products, homePageContent)
+│   ├── stores/                # Zustand-сторы
+│   ├── data/                  # Агрегированные данные (products, homePageContent)
 │   ├── constants/             # routes, branding, catalog, filters
-│   ├── lib/                   # Утилиты (catalog, cn)
+│   ├── lib/                   # loadProducts, catalog, cn
 │   └── types/                 # TypeScript-типы
 │
-├── components.json            # Конфигурация shadcn/ui
+├── components.json
 ├── vite.config.ts
-├── tsconfig.json
-├── tsconfig.app.json
 └── package.json
 ```
 
 ### Соглашения по организации кода
 
-- **Страницы** — папка `PageName/PageName.tsx` + `index.ts` с реэкспортом.
-- **Сторы** — чистая логика состояния в `stores/`, UI-логика — в `hooks/`.
-- **Константы** — маршруты, брендинг, ключи storage в `constants/`.
-- **Утилиты каталога** — `formatPrice`, `filterProducts` в `lib/catalog.ts`.
+- **Страницы** — `PageName/PageName.tsx` + `index.ts` с реэкспортом.
+- **Сторы** — мутации состояния в `stores/`, вычисления и связка с UI — в `hooks/`.
+- **Константы** — маршруты, брендинг, ключи `localStorage` в `constants/`.
+- **Каталог** — контент в `content/products/`, сборка в `lib/loadProducts.ts`, публичный API — `data/products.ts`.
+- **Утилиты** — `formatPrice`, `filterProducts` в `lib/catalog.ts`.
 
 ---
 
@@ -179,6 +181,7 @@ flowchart TB
     subgraph Logic["Слой логики"]
         Hooks[Хуки useCart, useFavorites, …]
         Lib[lib/catalog — фильтрация, форматирование]
+        Loader[lib/loadProducts — сборка каталога]
     end
 
     subgraph State["Слой состояния"]
@@ -189,6 +192,7 @@ flowchart TB
     end
 
     subgraph Data["Слой данных"]
+        Content[content/products/*/product.json + images]
         Products[data/products.ts]
         HomeContent[data/homePageContent.ts]
         LocalStorage[(localStorage)]
@@ -204,6 +208,8 @@ flowchart TB
     Hooks --> Products
     Hooks --> Lib
     Lib --> Products
+    Content --> Loader
+    Loader --> Products
     CartStore --> LocalStorage
     FavStore --> LocalStorage
     RatingsStore --> LocalStorage
@@ -253,13 +259,11 @@ sequenceDiagram
 | `ROUTES.USER` | `/user` | Профиль |
 | `ROUTES.NOT_FOUND` | `/404` | Страница ошибки |
 
-Вспомогательная функция:
-
 ```ts
 getProductRoute('5') // → '/products/5'
 ```
 
-Несуществующий товар на `ProductDetailPage` перенаправляется на `/404` через `<Navigate replace />`. Любой неизвестный URL (`*`) также ведёт на `NotFoundPage`.
+Несуществующий товар на `ProductDetailPage` перенаправляется на `/404`. Любой неизвестный URL (`*`) также ведёт на `NotFoundPage`.
 
 ---
 
@@ -304,68 +308,82 @@ getProductRoute('5') // → '/products/5'
 
 ### Разделение store / hook
 
-Сторы содержат минимальную логику мутаций. Хуки (`useCart`, `useFavorites`, …) добавляют:
-
-- вычисляемые значения (`totalItems`, `totalPrice`, `favoritesCount`);
-- объединение с каталогом (`getCartProducts`);
-- стабильные колбэки для UI.
+Сторы содержат минимальную логику мутаций. Хуки (`useCart`, `useFavorites`, …) добавляют вычисляемые значения, объединение с каталогом и стабильные колбэки для UI.
 
 ---
 
 ## Данные и каталог
 
-### Каталог товаров (`src/data/products.ts`)
+### Источник данных: `src/content/products/`
 
-Экспортируется массив `products: Product[]` — **16 позиций**:
+Каждый товар — отдельная папка со slug-именем:
 
-- **Категории:** Ракетки, Мячи, Одежда, Обувь, Аксессуары
-- **Бренды:** Wilson, Head, Babolat, Nike, Adidas, Yonex, Asics
+```
+src/content/products/wilson-pro-staff-97/
+├── product.json
+├── 01.jpg
+└── 02.jpg
+```
 
-Каждый товар:
+Пример `product.json`:
 
-```ts
-type Product = {
-  id: string
-  name: string
-  description: string
-  price: number          // в рублях
-  category: string
-  brand: string
-  images: string[]       // URL внешних изображений
-  rating: number         // базовый рейтинг 0–5
-  inStock: boolean
+```json
+{
+  "id": "1",
+  "slug": "wilson-pro-staff-97",
+  "name": "Wilson Pro Staff 97 ракетка",
+  "description": "…",
+  "price": 24990,
+  "category": "Ракетки",
+  "brand": "Wilson",
+  "rating": 4.8,
+  "inStock": true
 }
 ```
 
-Изображения формируются хелперами `tw()` и `twe()` — ссылки на Tennis Warehouse CDN.
+Опционально в `product.json` можно указать поле `images` — массив имён файлов для явного порядка галереи. Если поле отсутствует, изображения сортируются по имени файла.
 
-Также экспортируются границы цен для слайдера фильтра:
+### Сборка каталога (`src/lib/loadProducts.ts`)
 
-- `catalogMinPrice` — минимальная цена в каталоге
-- `catalogMaxPrice` — максимальная цена в каталоге
+Функция `loadProducts()` использует Vite `import.meta.glob`:
+
+- `../content/products/*/product.json` — метаданные (eager).
+- `../content/products/*/*.{jpg,jpeg,png,webp}` — изображения с `?url`.
+
+Товары сортируются по числовому `id`. При отсутствии изображений или несовпадении имён файлов выбрасывается ошибка на этапе сборки.
+
+### Публичный API (`src/data/products.ts`)
+
+```ts
+export const products = loadProducts()
+export const catalogMinPrice = Math.min(...)
+export const catalogMaxPrice = Math.max(...)
+```
+
+В каталоге **16 позиций** в категориях: Ракетки, Мячи, Одежда, Обувь, Аксессуары. Бренды: Wilson, Head, Babolat, Nike, Adidas, Yonex, Asics.
 
 ### Контент главной (`src/data/homePageContent.ts`)
 
-- `homeFeatures` — 6 блоков «Почему выбирают нас» с `iconId`, заголовком и описанием.
-- `featuredProducts` — топ-4 товара по рейтингу для секции «Хиты каталога».
+- `homeFeatures` — 6 блоков «Почему выбирают нас».
+- `featuredProducts` — топ-4 товара по рейтингу.
 
 ### Фильтрация (`src/lib/catalog.ts`)
 
-Функция `filterProducts(productList, filters)` применяет условия **последовательно** (логическое И):
+`filterProducts(productList, filters)` применяет условия (логическое И):
 
-1. **Поиск** — подстрока в `name`, `category`, `brand` (без учёта регистра).
-2. **Категория** — точное совпадение, если выбрана.
-3. **Бренд** — точное совпадение, если выбран.
-4. **Цена** — `minPrice ≤ price ≤ maxPrice`.
-5. **Наличие** — только `inStock: true`, если `inStockOnly`.
+1. Поиск по `name`, `category`, `brand`.
+2. Фильтр категории и бренда.
+3. Диапазон цены.
+4. Только в наличии (`inStockOnly`).
+
+Категории и бренды в фильтрах формируются динамически через `getUniqueFieldValues` из актуального каталога.
 
 Начальные фильтры: `src/constants/filters.ts` → `defaultProductFilters`.
 
 ### Брендинг (`src/constants/branding.ts`)
 
-- `STORE_NAME` — «Vibe Boom Tennis»
-- `STORE_SLOGAN`, `CTA_SLOGAN`, `PROFILE_HEADER_SLOGAN`
-- `STORE_NAME_PARTS`, `CTA_SLOGAN_PARTS` — части текста с CSS-классами neon-градиента
+- `STORE_NAME`, `STORE_SLOGAN`, `CTA_SLOGAN`, `PROFILE_HEADER_SLOGAN`
+- `STORE_NAME_PARTS`, `CTA_SLOGAN_PARTS` — части текста с neon CSS-классами
 
 ---
 
@@ -373,51 +391,24 @@ type Product = {
 
 ### HomePage (`/`)
 
-Лендинг магазина:
-
-1. **BrandLogosStrip** — лента логотипов брендов.
-2. **Hero-секция** — логотип, слоган, CTA-кнопки в каталог и избранное.
-3. **Хиты каталога** — 4 карточки `ProductCard`.
-4. **Преимущества** — сетка из 6 карточек с иконками.
-5. **Нижний CTA** — призыв к действию с ссылками на каталог и профиль.
+1. **Hero-секция** — логотип, слоган, CTA в каталог и избранное.
+2. **Хиты каталога** — 4 карточки `ProductCard`.
+3. **Преимущества** — 6 карточек с иконками.
+4. **Нижний CTA** — ссылки на каталог и профиль.
 
 ### ProductsPage (`/products`)
 
-- Слева: панель `ProductFilter`.
-- Справа: сетка `ProductCard` или `EmptyState` / скелетоны загрузки.
-- Хук `useProductFilters` имитирует загрузку 300 мс (`isLoading`) перед показом товаров.
+- Панель `ProductFilter` + сетка `ProductCard`.
+- `useProductFilters` имитирует загрузку 300 мс (`isLoading`).
 
 ### ProductDetailPage (`/products/:id`)
 
-- Хлебные крошки (`Breadcrumb`).
-- `ProductGallery` — галерея изображений.
-- Цена, категория, бренд, наличие.
-- Рейтинг каталога (read-only) и **пользовательская оценка** (интерактивная).
-- `QuantityControl` + кнопки «В корзину» и «В избранное».
-- Товар не в наличии — кнопка корзины disabled.
+- Галерея, описание, рейтинг, пользовательская оценка.
+- Добавление в корзину и избранное.
 
-### CartPage (`/cart`)
+### CartPage, FavoritesPage, UserPage, NotFoundPage
 
-- Пустая корзина → `EmptyState` с переходом в каталог.
-- Список `CartItemRow` с изменением количества и удалением.
-- Итоговая сумма через `formatPrice(totalPrice)`.
-- Действия: очистить корзину, продолжить покупки.
-
-### FavoritesPage (`/favorites`)
-
-- Фильтрация `products` по `productIds` из стора.
-- Компактный вариант карточек (`variant="compact"`).
-
-### UserPage (`/user`)
-
-- Форма профиля: имя, email, телефон.
-- Валидация Zod + React Hook Form.
-- Сохранение в `userStore` → `localStorage`.
-- Toast при успешном сохранении.
-
-### NotFoundPage (`/404`, `*`)
-
-Страница 404 с кнопкой возврата на главную.
+См. исходники в `src/pages/` — поведение без изменений относительно предыдущей версии.
 
 ---
 
@@ -427,28 +418,29 @@ type Product = {
 
 | Компонент | Назначение |
 |-----------|------------|
-| `AppLayout` | Общая оболочка: Header + Outlet + Footer + Toaster |
-| `Header` | Sticky-шапка, навигация, счётчики корзины/избранного |
-| `Footer` | Подвал с информацией о магазине |
-| `Logo` | Анимированный логотип |
-| `StoreName` | Стилизованное название с neon-эффектом |
-| `BrandLogosStrip` | Горизонтальная лента брендов |
+| `AppLayout` | Header + Outlet + Footer + Toaster |
+| `Header` | Навигация, счётчики корзины/избранного |
+| `Footer` | Подвал |
+| `Logo` | Логотип `/logo.png` |
+| `StoreName` | Стилизованное название магазина |
 
 ### Product (`src/components/product/`)
 
 | Компонент | Назначение |
 |-----------|------------|
-| `ProductCard` | Карточка товара (default / compact) |
-| `ProductFilter` | Панель фильтров каталога |
+| `ProductCard` | Карточка (default / compact) |
+| `ProductFilter` | Фильтры каталога |
 | `ProductGallery` | Галерея на странице товара |
-| `CartItemRow` | Строка товара в корзине |
-| `RatingStars` | Звёзды рейтинга (read-only / интерактивный) |
-| `QuantityControl` | Счётчик количества ± |
-| `EmptyState` | Пустое состояние с иконкой и CTA |
+| `CartItemRow` | Строка в корзине |
+| `RatingStars` | Звёзды рейтинга |
+| `QuantityControl` | Счётчик количества |
+| `EmptyState` | Пустое состояние |
 
 ### UI (`src/components/ui/`)
 
-Примитивы на базе shadcn/ui: `Button`, `Card`, `Input`, `Form`, `Select`, `Slider`, `Checkbox`, `Badge`, `Breadcrumb`, `Skeleton`, `Sonner` и др. Стилизуются через Tailwind и CSS-переменные из `index.css`.
+Используемые примитивы shadcn/ui:
+
+`Button`, `Card`, `Input`, `Form`, `Select`, `Slider`, `Checkbox`, `Badge`, `Breadcrumb`, `Separator`, `Skeleton`, `Label`, `Sonner`.
 
 ---
 
@@ -456,11 +448,11 @@ type Product = {
 
 | Хук | Файл | Описание |
 |-----|------|----------|
-| `useProducts` | `hooks/useProducts.ts` | Возвращает статический массив `products` |
-| `useProductFilters` | `hooks/useProductFilters.ts` | Состояние фильтров + `filteredProducts` + `isLoading` |
-| `useCart` | `hooks/useCart.ts` | Корзина с `totalItems`, `totalPrice`, `getCartProducts` |
-| `useFavorites` | `hooks/useFavorites.ts` | Избранное с `favoritesCount` |
-| `useRatings` | `hooks/useRatings.ts` | Прокси к `ratingsStore` |
+| `useProducts` | `hooks/useProducts.ts` | Массив `products` |
+| `useProductFilters` | `hooks/useProductFilters.ts` | Фильтры + `filteredProducts` + `isLoading` |
+| `useCart` | `hooks/useCart.ts` | Корзина с итогами |
+| `useFavorites` | `hooks/useFavorites.ts` | Избранное |
+| `useRatings` | `hooks/useRatings.ts` | Пользовательские оценки |
 
 ---
 
@@ -469,15 +461,30 @@ type Product = {
 Центральный реэкспорт: `src/types/index.ts`.
 
 ```ts
-// cart.ts
 type CartItem = { productId: string; quantity: number }
 
-// product.ts
-type Product = { id, name, description, price, category, brand, images, rating, inStock }
-type ProductFilters = { search, category, brand, minPrice, maxPrice, inStockOnly }
+type Product = {
+  id: string
+  name: string
+  description: string
+  price: number
+  category: string
+  brand: string
+  images: string[]
+  rating: number
+  inStock: boolean
+}
 
-// user.ts
-type UserProfile = { name, email, phone }
+type ProductFilters = {
+  search: string
+  category: string
+  brand: string
+  minPrice: number
+  maxPrice: number
+  inStockOnly: boolean
+}
+
+type UserProfile = { name: string; email: string; phone: string }
 type ProductRating = 1 | 2 | 3 | 4 | 5
 ```
 
@@ -487,57 +494,32 @@ type ProductRating = 1 | 2 | 3 | 4 | 5
 
 ### Tailwind CSS 4
 
-Подключение через `@import "tailwindcss"` в `src/index.css` и плагин `@tailwindcss/vite`.
+`@import "tailwindcss"` в `src/index.css`, плагин `@tailwindcss/vite`.
 
 ### Тема «neon green»
 
-CSS-переменные в `:root`:
+CSS-переменные `--neon-green-light`, `--neon-green-mid`, `--neon-green-deep` и утилиты `neon-border`, `neon-glow`, `neon-text-green-*`.
 
-- `--neon-green-light`, `--neon-green-mid`, `--neon-green-deep`
-- `--primary` привязан к неоново-зелёному оттенку
+### Доступность
 
-Утилитарные классы:
-
-| Класс | Эффект |
-|-------|--------|
-| `neon-border` | Светящаяся рамка |
-| `neon-glow` | Свечение кнопок |
-| `neon-glow-soft` | Мягкое свечение при hover |
-| `neon-text-green-vibe` / `-boom` / `-tennis` | Градиентный текст бренда |
-
-### Тёмная тема
-
-Класс `.dark` на корневом элементе переопределяет палитру (поддержка заложена в CSS, переключатель в UI может быть добавлен отдельно).
-
-### Доступность (a11y)
-
-- `aria-label` на интерактивных элементах (кнопки избранного, навигация).
-- `sr-only` для скрытых заголовков.
-- Семантические теги: `<header>`, `<main>`, `<nav>`.
-- Фокус-кольца через `focus-visible:ring`.
+`aria-label`, `sr-only`, семантические теги, `focus-visible:ring`.
 
 ---
 
 ## Персистентность (localStorage)
 
-Ключи определены в `src/constants/catalog.ts`:
+Ключи в `src/constants/catalog.ts`:
 
-| Ключ | Стор | Сохраняемые поля |
-|------|------|------------------|
+| Ключ | Стор | Поля |
+|------|------|------|
 | `tennis-boom-cart` | cartStore | `items` |
 | `tennis-boom-favorites` | favoritesStore | `productIds` |
 | `tennis-boom-ratings` | ratingsStore | `ratings` |
 | `tennis-boom-user` | userStore | `name`, `email`, `phone` |
 
-Zustand `partialize` сохраняет только нужные поля, без экшенов стора.
-
-> **Примечание:** префикс `tennis-boom-*` сохранён для обратной совместимости с предыдущими версиями проекта.
-
 ---
 
 ## Сборка и качество кода
-
-### Скрипты
 
 ```json
 {
@@ -548,60 +530,34 @@ Zustand `partialize` сохраняет только нужные поля, бе
 }
 ```
 
-`build` сначала проверяет типы через `tsc -b`, затем собирает бандл Vite в `dist/`.
-
-### ESLint
-
-Конфигурация в `eslint.config.js` — flat config с TypeScript ESLint и правилами React Hooks.
-
-### TypeScript
-
-Строгие настройки в `tsconfig.app.json`:
-
-- `noUnusedLocals`, `noUnusedParameters`
-- `verbatimModuleSyntax` — явные type-only импорты
+TypeScript: `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`.
 
 ---
 
 ## Расширение проекта
 
-Ниже — типичные направления развития с указанием точек интеграции.
+### Добавление товара
+
+1. Создать папку `src/content/products/{slug}/`.
+2. Добавить `product.json` с уникальным `id`.
+3. Положить изображения `.jpg` / `.png` / `.webp` в ту же папку.
+4. Перезапустить dev-сервер или выполнить `npm run build`.
+
+Категории и бренды в фильтрах обновятся автоматически.
 
 ### Подключение API
 
-1. Заменить `useProducts` на fetch/React Query к REST/GraphQL.
-2. Вынести `products.ts` в слой API-адаптера.
-3. Добавить состояния loading/error на страницах.
-
-### Оформление заказа
-
-1. Создать страницу `CheckoutPage`.
-2. Использовать данные из `useCart` и `useUserStore`.
-3. Отправлять POST на бэкенд; после успеха — `clearCart()`.
-
-### Аутентификация
-
-1. Добавить `authStore` с JWT/session.
-2. Защитить маршруты через layout-обёртку или `loader` React Router.
-
-### Тёмная тема
-
-1. Добавить переключатель в `Header`.
-2. Переключать класс `dark` на `<html>` или через CSS `color-scheme`.
-
-### Добавление товара
-
-В `src/data/products.ts` добавить объект в массив `products` с уникальным `id`. Категории и бренды подтянутся в фильтры автоматически через `getUniqueFieldValues`.
+Заменить `loadProducts()` на асинхронную загрузку в `useProducts` (React Query / fetch).
 
 ### Добавление страницы
 
-1. Создать `src/pages/NewPage/NewPage.tsx` + `index.ts`.
-2. Добавить константу в `ROUTES`.
-3. Зарегистрировать `<Route>` в `App.tsx` внутри `AppLayout`.
+1. `src/pages/NewPage/NewPage.tsx` + `index.ts`.
+2. Константа в `ROUTES`.
+3. `<Route>` в `App.tsx`.
 
 ---
 
-## Диаграмма навигации пользователя
+## Диаграмма навигации
 
 ```mermaid
 flowchart LR
@@ -610,9 +566,7 @@ flowchart LR
     Home --> User[Профиль]
     Products --> Detail[Товар]
     Detail --> Cart[Корзина]
-    Detail --> Favorites
     Products --> Cart
-    Products --> Favorites
     Header[Header] --> Home
     Header --> Products
     Header --> Cart
@@ -622,10 +576,4 @@ flowchart LR
 
 ---
 
-## Контакты и лицензия
-
-Проект распространяется как учебный / демонстрационный (`private: false` в `package.json`). Для вопросов по коду ориентируйтесь на структуру папок и JSDoc-комментарии в исходниках.
-
----
-
-*Документация сгенерирована для репозитория `vibe-boom-tennis`. При изменении архитектуры обновляйте соответствующие разделы.*
+*Документация для репозитория `vibe-boom-tennis`. Обновлена после рефакторинга: контентный каталог, удаление неиспользуемых файлов.*
