@@ -354,22 +354,63 @@ export const useTheme = (): UseThemeReturn => {
 ## Листинг А.17 – Функция useCartStore.addItem
 
 ```typescript
-addItem: (productId, quantity = 1) => {
-  const existing = get().items.find((item) => item.productId === productId)
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-  if (existing) {
-    set({
-      items: get().items.map((item) =>
-        item.productId === productId
-          ? { ...item, quantity: item.quantity + quantity }
-          : item,
-      ),
-    })
-    return
-  }
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { CartItem } from '@/types'
 
-  set({ items: [...get().items, { productId, quantity }] })
-},
+type CartState = {
+  items: CartItem[]
+  addItem: (productId: string, quantity?: number) => void
+  removeItem: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number) => void
+  clearCart: () => void
+}
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      addItem: (productId, quantity = 1) => {
+        const existing = get().items.find((item) => item.productId === productId)
+
+        if (existing) {
+          set({
+            items: get().items.map((item) =>
+              item.productId === productId
+                ? { ...item, quantity: item.quantity + quantity }
+                : item,
+            ),
+          })
+          return
+        }
+
+        set({ items: [...get().items, { productId, quantity }] })
+      },
+      removeItem: (productId) => {
+        set({ items: get().items.filter((item) => item.productId !== productId) })
+      },
+      updateQuantity: (productId, quantity) => {
+        if (quantity <= 0) {
+          get().removeItem(productId)
+          return
+        }
+
+        set({
+          items: get().items.map((item) =>
+            item.productId === productId ? { ...item, quantity } : item,
+          ),
+        })
+      },
+      clearCart: () => set({ items: [] }),
+    }),
+    {
+      name: STORAGE_KEYS.CART,
+      partialize: (state) => ({ items: state.items }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/cartStore.ts`*
@@ -379,9 +420,63 @@ addItem: (productId, quantity = 1) => {
 ## Листинг А.18 – Функция useCartStore.removeItem
 
 ```typescript
-removeItem: (productId) => {
-  set({ items: get().items.filter((item) => item.productId !== productId) })
-},
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { CartItem } from '@/types'
+
+type CartState = {
+  items: CartItem[]
+  addItem: (productId: string, quantity?: number) => void
+  removeItem: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number) => void
+  clearCart: () => void
+}
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      addItem: (productId, quantity = 1) => {
+        const existing = get().items.find((item) => item.productId === productId)
+
+        if (existing) {
+          set({
+            items: get().items.map((item) =>
+              item.productId === productId
+                ? { ...item, quantity: item.quantity + quantity }
+                : item,
+            ),
+          })
+          return
+        }
+
+        set({ items: [...get().items, { productId, quantity }] })
+      },
+      removeItem: (productId) => {
+        set({ items: get().items.filter((item) => item.productId !== productId) })
+      },
+      updateQuantity: (productId, quantity) => {
+        if (quantity <= 0) {
+          get().removeItem(productId)
+          return
+        }
+
+        set({
+          items: get().items.map((item) =>
+            item.productId === productId ? { ...item, quantity } : item,
+          ),
+        })
+      },
+      clearCart: () => set({ items: [] }),
+    }),
+    {
+      name: STORAGE_KEYS.CART,
+      partialize: (state) => ({ items: state.items }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/cartStore.ts`*
@@ -391,18 +486,63 @@ removeItem: (productId) => {
 ## Листинг А.19 – Функция useCartStore.updateQuantity
 
 ```typescript
-updateQuantity: (productId, quantity) => {
-  if (quantity <= 0) {
-    get().removeItem(productId)
-    return
-  }
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-  set({
-    items: get().items.map((item) =>
-      item.productId === productId ? { ...item, quantity } : item,
-    ),
-  })
-},
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { CartItem } from '@/types'
+
+type CartState = {
+  items: CartItem[]
+  addItem: (productId: string, quantity?: number) => void
+  removeItem: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number) => void
+  clearCart: () => void
+}
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      addItem: (productId, quantity = 1) => {
+        const existing = get().items.find((item) => item.productId === productId)
+
+        if (existing) {
+          set({
+            items: get().items.map((item) =>
+              item.productId === productId
+                ? { ...item, quantity: item.quantity + quantity }
+                : item,
+            ),
+          })
+          return
+        }
+
+        set({ items: [...get().items, { productId, quantity }] })
+      },
+      removeItem: (productId) => {
+        set({ items: get().items.filter((item) => item.productId !== productId) })
+      },
+      updateQuantity: (productId, quantity) => {
+        if (quantity <= 0) {
+          get().removeItem(productId)
+          return
+        }
+
+        set({
+          items: get().items.map((item) =>
+            item.productId === productId ? { ...item, quantity } : item,
+          ),
+        })
+      },
+      clearCart: () => set({ items: [] }),
+    }),
+    {
+      name: STORAGE_KEYS.CART,
+      partialize: (state) => ({ items: state.items }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/cartStore.ts`*
@@ -412,7 +552,63 @@ updateQuantity: (productId, quantity) => {
 ## Листинг А.20 – Функция useCartStore.clearCart
 
 ```typescript
-clearCart: () => set({ items: [] }),
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { CartItem } from '@/types'
+
+type CartState = {
+  items: CartItem[]
+  addItem: (productId: string, quantity?: number) => void
+  removeItem: (productId: string) => void
+  updateQuantity: (productId: string, quantity: number) => void
+  clearCart: () => void
+}
+
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      addItem: (productId, quantity = 1) => {
+        const existing = get().items.find((item) => item.productId === productId)
+
+        if (existing) {
+          set({
+            items: get().items.map((item) =>
+              item.productId === productId
+                ? { ...item, quantity: item.quantity + quantity }
+                : item,
+            ),
+          })
+          return
+        }
+
+        set({ items: [...get().items, { productId, quantity }] })
+      },
+      removeItem: (productId) => {
+        set({ items: get().items.filter((item) => item.productId !== productId) })
+      },
+      updateQuantity: (productId, quantity) => {
+        if (quantity <= 0) {
+          get().removeItem(productId)
+          return
+        }
+
+        set({
+          items: get().items.map((item) =>
+            item.productId === productId ? { ...item, quantity } : item,
+          ),
+        })
+      },
+      clearCart: () => set({ items: [] }),
+    }),
+    {
+      name: STORAGE_KEYS.CART,
+      partialize: (state) => ({ items: state.items }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/cartStore.ts`*
@@ -422,16 +618,43 @@ clearCart: () => set({ items: [] }),
 ## Листинг А.21 – Функция useFavoritesStore.toggleFavorite
 
 ```typescript
-toggleFavorite: (productId) => {
-  const { productIds } = get()
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 
-  if (productIds.includes(productId)) {
-    set({ productIds: productIds.filter((id) => id !== productId) })
-    return
-  }
+import { STORAGE_KEYS } from '@/constants/catalog'
 
-  set({ productIds: [...productIds, productId] })
-},
+type FavoritesState = {
+  productIds: string[]
+  toggleFavorite: (productId: string) => void
+  isFavorite: (productId: string) => boolean
+  removeFavorite: (productId: string) => void
+}
+
+export const useFavoritesStore = create<FavoritesState>()(
+  persist(
+    (set, get) => ({
+      productIds: [],
+      toggleFavorite: (productId) => {
+        const { productIds } = get()
+
+        if (productIds.includes(productId)) {
+          set({ productIds: productIds.filter((id) => id !== productId) })
+          return
+        }
+
+        set({ productIds: [...productIds, productId] })
+      },
+      isFavorite: (productId) => get().productIds.includes(productId),
+      removeFavorite: (productId) => {
+        set({ productIds: get().productIds.filter((id) => id !== productId) })
+      },
+    }),
+    {
+      name: STORAGE_KEYS.FAVORITES,
+      partialize: (state) => ({ productIds: state.productIds }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/favoritesStore.ts`*
@@ -441,7 +664,43 @@ toggleFavorite: (productId) => {
 ## Листинг А.22 – Функция useFavoritesStore.isFavorite
 
 ```typescript
-isFavorite: (productId) => get().productIds.includes(productId),
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+
+type FavoritesState = {
+  productIds: string[]
+  toggleFavorite: (productId: string) => void
+  isFavorite: (productId: string) => boolean
+  removeFavorite: (productId: string) => void
+}
+
+export const useFavoritesStore = create<FavoritesState>()(
+  persist(
+    (set, get) => ({
+      productIds: [],
+      toggleFavorite: (productId) => {
+        const { productIds } = get()
+
+        if (productIds.includes(productId)) {
+          set({ productIds: productIds.filter((id) => id !== productId) })
+          return
+        }
+
+        set({ productIds: [...productIds, productId] })
+      },
+      isFavorite: (productId) => get().productIds.includes(productId),
+      removeFavorite: (productId) => {
+        set({ productIds: get().productIds.filter((id) => id !== productId) })
+      },
+    }),
+    {
+      name: STORAGE_KEYS.FAVORITES,
+      partialize: (state) => ({ productIds: state.productIds }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/favoritesStore.ts`*
@@ -451,9 +710,43 @@ isFavorite: (productId) => get().productIds.includes(productId),
 ## Листинг А.23 – Функция useFavoritesStore.removeFavorite
 
 ```typescript
-removeFavorite: (productId) => {
-  set({ productIds: get().productIds.filter((id) => id !== productId) })
-},
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+
+type FavoritesState = {
+  productIds: string[]
+  toggleFavorite: (productId: string) => void
+  isFavorite: (productId: string) => boolean
+  removeFavorite: (productId: string) => void
+}
+
+export const useFavoritesStore = create<FavoritesState>()(
+  persist(
+    (set, get) => ({
+      productIds: [],
+      toggleFavorite: (productId) => {
+        const { productIds } = get()
+
+        if (productIds.includes(productId)) {
+          set({ productIds: productIds.filter((id) => id !== productId) })
+          return
+        }
+
+        set({ productIds: [...productIds, productId] })
+      },
+      isFavorite: (productId) => get().productIds.includes(productId),
+      removeFavorite: (productId) => {
+        set({ productIds: get().productIds.filter((id) => id !== productId) })
+      },
+    }),
+    {
+      name: STORAGE_KEYS.FAVORITES,
+      partialize: (state) => ({ productIds: state.productIds }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/favoritesStore.ts`*
@@ -463,7 +756,40 @@ removeFavorite: (productId) => {
 ## Листинг А.24 – Функция useUserStore.setProfile
 
 ```typescript
-setProfile: (profile) => set({ ...profile }),
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { UserProfile } from '@/types'
+
+type UserState = UserProfile & {
+  setProfile: (profile: UserProfile) => void
+  resetProfile: () => void
+}
+
+const defaultProfile: UserProfile = {
+  name: '',
+  email: '',
+  phone: '',
+}
+
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      ...defaultProfile,
+      setProfile: (profile) => set({ ...profile }),
+      resetProfile: () => set({ ...defaultProfile }),
+    }),
+    {
+      name: STORAGE_KEYS.USER,
+      partialize: (state) => ({
+        name: state.name,
+        email: state.email,
+        phone: state.phone,
+      }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/userStore.ts`*
@@ -473,7 +799,40 @@ setProfile: (profile) => set({ ...profile }),
 ## Листинг А.25 – Функция useUserStore.resetProfile
 
 ```typescript
-resetProfile: () => set({ ...defaultProfile }),
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { UserProfile } from '@/types'
+
+type UserState = UserProfile & {
+  setProfile: (profile: UserProfile) => void
+  resetProfile: () => void
+}
+
+const defaultProfile: UserProfile = {
+  name: '',
+  email: '',
+  phone: '',
+}
+
+export const useUserStore = create<UserState>()(
+  persist(
+    (set) => ({
+      ...defaultProfile,
+      setProfile: (profile) => set({ ...profile }),
+      resetProfile: () => set({ ...defaultProfile }),
+    }),
+    {
+      name: STORAGE_KEYS.USER,
+      partialize: (state) => ({
+        name: state.name,
+        email: state.email,
+        phone: state.phone,
+      }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/userStore.ts`*
@@ -483,9 +842,33 @@ resetProfile: () => set({ ...defaultProfile }),
 ## Листинг А.26 – Функция useRatingsStore.setRating
 
 ```typescript
-setRating: (productId, rating) => {
-  set({ ratings: { ...get().ratings, [productId]: rating } })
-},
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { ProductRating } from '@/types'
+
+type RatingsState = {
+  ratings: Record<string, ProductRating>
+  setRating: (productId: string, rating: ProductRating) => void
+  getRating: (productId: string) => ProductRating | undefined
+}
+
+export const useRatingsStore = create<RatingsState>()(
+  persist(
+    (set, get) => ({
+      ratings: {},
+      setRating: (productId, rating) => {
+        set({ ratings: { ...get().ratings, [productId]: rating } })
+      },
+      getRating: (productId) => get().ratings[productId],
+    }),
+    {
+      name: STORAGE_KEYS.RATINGS,
+      partialize: (state) => ({ ratings: state.ratings }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/ratingsStore.ts`*
@@ -495,7 +878,33 @@ setRating: (productId, rating) => {
 ## Листинг А.27 – Функция useRatingsStore.getRating
 
 ```typescript
-getRating: (productId) => get().ratings[productId],
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { ProductRating } from '@/types'
+
+type RatingsState = {
+  ratings: Record<string, ProductRating>
+  setRating: (productId: string, rating: ProductRating) => void
+  getRating: (productId: string) => ProductRating | undefined
+}
+
+export const useRatingsStore = create<RatingsState>()(
+  persist(
+    (set, get) => ({
+      ratings: {},
+      setRating: (productId, rating) => {
+        set({ ratings: { ...get().ratings, [productId]: rating } })
+      },
+      getRating: (productId) => get().ratings[productId],
+    }),
+    {
+      name: STORAGE_KEYS.RATINGS,
+      partialize: (state) => ({ ratings: state.ratings }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/ratingsStore.ts`*
@@ -505,7 +914,31 @@ getRating: (productId) => get().ratings[productId],
 ## Листинг А.28 – Функция useThemeStore.setTheme
 
 ```typescript
-setTheme: (theme) => set({ theme }),
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { Theme } from '@/types/theme'
+
+type ThemeState = {
+  theme: Theme
+  setTheme: (theme: Theme) => void
+  toggleTheme: () => void
+}
+
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set, get) => ({
+      theme: 'light',
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set({ theme: get().theme === 'dark' ? 'light' : 'dark' }),
+    }),
+    {
+      name: STORAGE_KEYS.THEME,
+      partialize: (state) => ({ theme: state.theme }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/themeStore.ts`*
@@ -515,7 +948,31 @@ setTheme: (theme) => set({ theme }),
 ## Листинг А.29 – Функция useThemeStore.toggleTheme
 
 ```typescript
-toggleTheme: () => set({ theme: get().theme === 'dark' ? 'light' : 'dark' }),
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+
+import { STORAGE_KEYS } from '@/constants/catalog'
+import type { Theme } from '@/types/theme'
+
+type ThemeState = {
+  theme: Theme
+  setTheme: (theme: Theme) => void
+  toggleTheme: () => void
+}
+
+export const useThemeStore = create<ThemeState>()(
+  persist(
+    (set, get) => ({
+      theme: 'light',
+      setTheme: (theme) => set({ theme }),
+      toggleTheme: () => set({ theme: get().theme === 'dark' ? 'light' : 'dark' }),
+    }),
+    {
+      name: STORAGE_KEYS.THEME,
+      partialize: (state) => ({ theme: state.theme }),
+    },
+  ),
+)
 ```
 
 *Файл: `src/stores/themeStore.ts`*
