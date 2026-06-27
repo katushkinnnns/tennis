@@ -9,24 +9,17 @@
 ## Содержание
 
 1. [Обзор](#обзор)
-2. [Технологический стек](#технологический-стек)
-3. [Быстрый старт](#быстрый-старт)
-4. [Структура проекта](#структура-проекта)
-5. [Архитектура приложения](#архитектура-приложения)
-6. [Маршрутизация](#маршрутизация)
-7. [Управление состоянием](#управление-состоянием)
-8. [Данные и каталог](#данные-и-каталог)
-9. [Страницы приложения](#страницы-приложения)
-10. [Компоненты](#компоненты)
-11. [Хуки](#хуки)
-12. [Типы данных](#типы-данных)
-13. [Стилизация и UI](#стилизация-и-ui)
-14. [Персистентность (localStorage)](#персистентность-localstorage)
-15. [Сборка и качество кода](#сборка-и-качество-кода)
-16. [Общий алгоритм работы (рисунок 2.1)](#общий-алгоритм-работы-рисунок-21)
-17. [Алгоритм формирования корзины (план для блок-схемы)](#алгоритм-формирования-корзины-и-расчёта-итоговой-стоимости-план-для-блок-схемы)
-18. [Глава 3 — текст для отчёта](#глава-3--программное-конструирование-текст-для-отчёта)
-19. [Расширение проекта](#расширение-проекта)
+2. [Полное объяснение программы для новичков](#полное-объяснение-программы-для-новичков)
+3. [Технологический стек](#технологический-стек)
+4. [Быстрый старт](#быстрый-старт)
+5. [Структура проекта](#структура-проекта)
+6. [Архитектура](#архитектура)
+7. [Маршрутизация](#маршрутизация)
+8. [Управление состоянием](#управление-состоянием)
+9. [Данные и каталог](#данные-и-каталог)
+10. [Страницы и компоненты](#страницы-и-компоненты)
+11. [Персистентность](#персистентность-localstorage)
+12. [Расширение проекта](#расширение-проекта)
 
 ---
 
@@ -41,737 +34,454 @@
 | Каталог | 16 товаров с фильтрацией по поиску, категории, бренду, цене и наличию |
 | Карточка товара | Галерея, описание, рейтинг, добавление в корзину и избранное |
 | Корзина | Изменение количества, подсчёт итога, очистка |
-| Избранное | Список товаров по ID с компактными карточками |
+| Избранное | Список товаров по ID |
 | Профиль | Форма с валидацией (имя, email, телефон) |
 | Оценки | Пользователь может поставить 1–5 звёзд на странице товара |
-| Уведомления | Toast-сообщения при действиях пользователя |
+| Тема | Светлая / тёмная тема с сохранением выбора |
 
-### Ограничения текущей версии
+### Ограничения
 
-- Нет серверного API — заказ оформить нельзя, только просмотр корзины.
-- Нет аутентификации — профиль локальный.
-- Рейтинг товара в каталоге — статический; пользовательская оценка влияет только на странице детали.
+- Нет серверного API — заказ оформить нельзя.
+- Нет аутентификации — профиль локальный, привязан к браузеру.
+- Рейтинг на карточке в каталоге — из `product.json`; пользовательская оценка влияет на странице товара.
+
+---
+
+## Полное объяснение программы для новичков
+
+Этот раздел написан для тех, кто только начинает изучать веб-разработку и React. Здесь объясняется **вся программа целиком**: что она делает, из каких частей состоит, как данные проходят через приложение и с чего начать чтение кода.
+
+### 1. Что это за программа простыми словами
+
+**Vibe Boom Tennis** — это сайт-магазин теннисных товаров, который работает **полностью в браузере**. Есть главная страница, каталог, карточки товаров, корзина, избранное и профиль пользователя. В отличие от крупных магазинов, у нас **нет сервера с базой данных** — все товары «зашиты» в программу, а корзина, избранное и профиль сохраняются в памяти браузера (`localStorage`).
+
+Когда пользователь открывает сайт:
+
+1. Браузер загружает HTML-страницу и JavaScript-файлы.
+2. React «оживляет» страницу — рисует кнопки, карточки, меню.
+3. Пользователь кликает по ссылкам — React **не перезагружает** всю страницу, а меняет только нужную часть экрана.
+4. При добавлении в корзину данные записываются в `localStorage` — после перезагрузки браузера корзина не пропадёт.
+
+### 2. Базовые понятия
+
+| Термин | Простое объяснение | Где в проекте |
+|--------|-------------------|---------------|
+| **HTML** | Каркас страницы | `index.html` — контейнер `<div id="root">` |
+| **CSS** | Внешний вид | `src/index.css`, классы Tailwind |
+| **TypeScript** | JavaScript с проверкой типов | Все файлы `.ts` и `.tsx` |
+| **React** | Библиотека для UI из компонентов | `src/components/`, `src/pages/` |
+| **Компонент** | Переиспользуемая часть интерфейса | `ProductCard`, `Header` |
+| **Страница (Page)** | Экран по адресу в браузере | `HomePage`, `CartPage` |
+| **SPA** | Одна HTML-страница, контент меняется без перезагрузки | Всё приложение |
+| **Маршрут (Route)** | Адрес, например `/products` | `constants/routes.ts`, `App.tsx` |
+| **Состояние (State)** | Изменяемые данные | Zustand в `src/stores/` |
+| **Хук (Hook)** | Функция для доступа к логике React | `useCart`, `useProductFilters` |
+| **Props** | Параметры компонента | `product` в `ProductCard` |
+| **localStorage** | Хранилище браузера | Ключи `tennis-boom-cart` и др. |
+
+### 3. Что происходит при запуске (пошагово)
+
+```
+Пользователь → index.html → main.tsx → App.tsx → AppLayout → Страница
+```
+
+**Шаг 1. `index.html`** — браузер получает HTML с пустым `<div id="root">`.
+
+**Шаг 2. `src/main.tsx`** — точка входа:
+
+1. Подключает стили `index.css`.
+2. Вызывает `initializeTheme()` — тема из `localStorage`.
+3. Монтирует `<App />` в `#root`.
+
+**Шаг 3. `src/App.tsx`** — React Router сопоставляет URL и страницу:
+
+| Адрес | Страница |
+|-------|----------|
+| `/` | `HomePage` |
+| `/products` | `ProductsPage` |
+| `/products/:id` | `ProductDetailPage` |
+| `/cart` | `CartPage` |
+| `/favorites` | `FavoritesPage` |
+| `/user` | `UserPage` |
+| другой | `NotFoundPage` |
+
+**Шаг 4. `AppLayout`** — шапка + `<Outlet />` (контент страницы) + подвал + уведомления.
+
+**Шаг 5. Каталог** — при импорте `data/products.ts` вызывается `loadProducts()`: читает `content/products/*/product.json` и изображения, собирает 16 товаров.
+
+### 4. Карта проекта
+
+| Папка | Назначение | Примеры |
+|-------|------------|---------|
+| `src/pages/` | Экраны для пользователя | `CartPage`, `ProductsPage` |
+| `src/components/` | Блоки интерфейса | `ProductCard`, `Header` |
+| `src/hooks/` | Логика для страниц | `useCart`, `useFavorites` |
+| `src/stores/` | Глобальные данные | `cartStore`, `userStore` |
+| `src/content/` | Исходники товаров | `product.json`, фото |
+| `src/data/` | Готовые данные | `products.ts` |
+| `src/lib/` | Утилиты | `catalog.ts`, `loadProducts.ts` |
+| `src/constants/` | Константы | маршруты, ключи storage |
+| `src/types/` | TypeScript-типы | `Product`, `CartItem` |
+
+**С чего начать чтение:** `main.tsx` → `App.tsx` → любая `Page` → её `components` и `hooks`.
+
+### 5. Каждая страница подробно
+
+#### Главная (`HomePage`, `/`)
+
+- Hero с логотипом и слоганом.
+- 4 хита каталога (`featuredProducts`).
+- 6 блоков преимуществ.
+- CTA-кнопки в каталог и профиль.
+
+Данные: `data/homePageContent.ts`, товары из `products`.
+
+#### Каталог (`ProductsPage`, `/products`)
+
+Слева — `ProductFilter`, справа — сетка `ProductCard`.
+
+**Фильтрация:**
+
+1. `useProductFilters` хранит `filters` в `useState`.
+2. При изменении вызывается `filterProducts` из `lib/catalog.ts`.
+3. Для каждого товара **последовательно** проверяется:
+   - поиск в `name + category + brand`;
+   - категория;
+   - бренд;
+   - диапазон цены;
+   - наличие (`inStockOnly`).
+4. Не прошёл проверку — исключается.
+5. Пустой результат → `EmptyState` + сброс фильтров.
+6. Первые 300 мс — skeleton-заглушки (`isLoading`).
+
+#### Страница товара (`ProductDetailPage`, `/products/:id`)
+
+1. `useParams` берёт `id` из URL.
+2. `getProductById` ищет товар; нет — редирект на `/404`.
+3. Галерея, описание, рейтинг каталога, **ваша оценка** (1–5 → `ratingsStore`).
+4. Количество + «В корзину» + «В избранное».
+
+#### Корзина (`CartPage`, `/cart`)
+
+В store только `{ productId, quantity }`. Цена и название — из каталога при отображении.
+
+1. `getCartProducts()` — связка позиций с товарами.
+2. Пусто → заглушка.
+3. `totalPrice = Σ (price × quantity)`.
+4. Изменение qty → `updateQuantity`; при `qty ≤ 0` — удаление.
+5. Бейдж в шапке: `totalItems` = сумма всех `quantity`.
+
+#### Избранное (`FavoritesPage`, `/favorites`)
+
+Массив `productIds` в `favoritesStore`. Товары отбираются из `products` по ID. Карточки в режиме `compact`.
+
+#### Профиль (`UserPage`, `/user`)
+
+React Hook Form + Zod:
+
+| Поле | Правило |
+|------|---------|
+| Имя | ≥ 2 символа |
+| Email | валидный email |
+| Телефон | российский формат |
+
+Submit → `userStore.setProfile` → `localStorage` → toast.
+
+#### 404 (`NotFoundPage`)
+
+Неизвестный URL или несуществующий товар.
+
+### 6. Компоненты
+
+**Layout:** `Header`, `Footer`, `Logo`, `StoreName`, `ThemeToggle`, `AppLayout`.
+
+**Product:** `ProductCard`, `ProductFilter`, `ProductGallery`, `CartItemRow`, `RatingStars`, `QuantityControl`, `EmptyState`.
+
+**UI (shadcn):** `Button`, `Input`, `Card`, `Form`, `Select`, `Slider`, `Checkbox`, `Badge`, `Breadcrumb`, `Skeleton`, `Sonner`.
+
+### 7. Сторы и хуки
+
+| Store | Данные | localStorage |
+|-------|--------|--------------|
+| `cartStore` | `items[]` | `tennis-boom-cart` |
+| `favoritesStore` | `productIds[]` | `tennis-boom-favorites` |
+| `ratingsStore` | `Record<id, 1-5>` | `tennis-boom-ratings` |
+| `userStore` | name, email, phone | `tennis-boom-user` |
+| `themeStore` | light / dark | `tennis-boom-theme` |
+
+**Persist** сохраняет данные при изменении и восстанавливает при загрузке. `partialize` — только данные, без методов.
+
+| Хук | Дополнительно |
+|-----|---------------|
+| `useCart` | `totalPrice`, `totalItems`, `getCartProducts` |
+| `useFavorites` | `favoritesCount`, `toggleFavorite` |
+| `useProductFilters` | `filters`, `filteredProducts`, `isLoading` |
+| `useProducts` | массив `products` |
+| `useRatings` | оценки пользователя |
+| `useTheme` | переключение темы |
+
+**Цепочка «В корзину»:**
+
+```
+Клик → useCart().addItem(id) → cartStore → localStorage → обновление бейджа в Header
+```
+
+### 8. Каталог товаров
+
+```
+content/products/wilson-pro-staff-97/
+├── product.json
+├── 01.jpg
+└── 02.jpg
+```
+
+`loadProducts()` через `import.meta.glob` собирает массив при сборке. `data/products.ts` экспортирует `products`, `catalogMinPrice`, `catalogMaxPrice`.
+
+### 9. TypeScript
+
+Типы в `src/types/` описывают форму данных. Компилятор ловит опечатки (`product.prce` → ошибка) до запуска.
+
+### 10. Стили
+
+**Tailwind** — классы в JSX: `className="flex gap-2 text-primary"`.  
+**Тема neon** — CSS-переменные в `index.css`.  
+**Адаптив** — `sm:`, `lg:` префиксы для разных экранов.
+
+### 11. Toast-уведомления
+
+`toast.success('...')` через Sonner. `<Toaster />` в `AppLayout`.
+
+### 12. Полный сценарий пользователя
+
+1. Открывает сайт → главная.
+2. «В каталог» → фильтр «Wilson».
+3. Клик на карточку → страница товара.
+4. Количество 2 → «В корзину».
+5. Меню → корзина → видит итог 49 980 ₽.
+6. Профиль → сохраняет имя и email.
+7. Закрывает вкладку → при возврате данные на месте.
+
+### 13. Чего программа не делает
+
+- Нет оплаты и оформления заказа.
+- Нет пароля и синхронизации между устройствами.
+- Очистка данных браузера удалит корзину и профиль.
+
+### 14. Маршрут изучения кода
+
+```
+1. index.html
+2. src/main.tsx
+3. src/App.tsx
+4. src/constants/routes.ts
+5. src/components/layout/AppLayout.tsx
+6. src/pages/HomePage/HomePage.tsx
+7. src/pages/ProductsPage/ProductsPage.tsx
+8. src/hooks/useProductFilters.ts
+9. src/lib/catalog.ts
+10. src/components/product/ProductCard.tsx
+11. src/stores/cartStore.ts
+12. src/hooks/useCart.ts
+13. src/pages/CartPage/CartPage.tsx
+14. src/pages/UserPage/UserPage.tsx
+```
+
+### 15. Глоссарий файлов
+
+| Файл | Назначение |
+|------|------------|
+| `vite.config.ts` | Сборщик, алиас `@` |
+| `package.json` | Зависимости и скрипты |
+| `src/index.css` | Глобальные стили и тема |
+| `src/lib/utils.ts` | `cn()` — склейка CSS-классов |
+| `src/lib/theme.ts` | Инициализация темы |
+| `src/constants/filters.ts` | Фильтры по умолчанию |
+| `src/constants/branding.ts` | Название и слоганы |
+
+### 16. Частые вопросы
+
+**Почему SPA, а не отдельные HTML-страницы?** Быстрее навигация, плавный UX.
+
+**Почему корзина не хранит цену?** Цена всегда из актуального каталога.
+
+**Что такое `@/`?** Сокращение для `src/`.
+
+**Как добавить товар?** Папка в `content/products/` + `product.json` + фото.
+
+### 17. Итоговая схема
+
+```mermaid
+flowchart TB
+    User([Пользователь])
+
+    subgraph Browser
+        HTML[index.html]
+        LS[(localStorage)]
+    end
+
+    subgraph ReactApp
+        Main[main.tsx]
+        App[App + Router]
+        Pages[Страницы]
+        Hooks[Хуки]
+        Stores[Stores]
+    end
+
+    subgraph Data
+        Content[content/products]
+        Products[products]
+        Lib[lib/catalog]
+    end
+
+    User --> HTML --> Main --> App --> Pages
+    Pages --> Hooks --> Stores
+    Hooks --> Products --> Lib --> Content
+    Stores <--> LS
+```
+
+**Вывод:** товары из файлов при сборке, пользовательские данные в Zustand + localStorage. Страницы = экраны, компоненты = UI, хуки = связка, сторы = изменяемые данные.
 
 ---
 
 ## Технологический стек
 
-| Категория | Технология | Назначение |
-|-----------|------------|------------|
-| Сборка | [Vite 6](https://vite.dev/) | Dev-сервер, HMR, production build |
-| UI | [React 18](https://react.dev/) | Компонентный интерфейс |
-| Язык | [TypeScript 5.8](https://www.typescriptlang.org/) | Статическая типизация |
-| Маршруты | [React Router 6](https://reactrouter.com/) | Клиентская навигация |
-| Состояние | [Zustand 5](https://zustand.docs.pmnd.rs/) | Глобальные сторы с persist |
-| Стили | [Tailwind CSS 4](https://tailwindcss.com/) | Utility-first CSS |
-| UI-кит | [shadcn/ui](https://ui.shadcn.com/) (Base UI + Radix) | Готовые доступные компоненты |
-| Формы | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) | Валидация профиля |
-| Иконки | [Lucide React](https://lucide.dev/) | SVG-иконки |
-| Уведомления | [Sonner](https://sonner.emilkowal.ski/) | Toast |
+| Категория | Технология |
+|-----------|------------|
+| Сборка | Vite 6 |
+| UI | React 18 |
+| Язык | TypeScript 5.8 |
+| Маршруты | React Router 6 |
+| Состояние | Zustand 5 + persist |
+| Стили | Tailwind CSS 4 |
+| UI-кит | shadcn/ui |
+| Формы | React Hook Form + Zod |
+| Иконки | Lucide React |
+| Уведомления | Sonner |
 
-### Алиас путей
-
-В `vite.config.ts` и `tsconfig.app.json` настроен алиас `@` → `src/`:
-
-```ts
-import { ROUTES } from '@/constants/routes'
-import { useCart } from '@/hooks/useCart'
-```
+Алиас `@` → `src/` в `vite.config.ts` и `tsconfig.app.json`.
 
 ---
 
 ## Быстрый старт
 
-### Требования
-
-- Node.js 18+
-- npm
-
-### Установка и запуск
-
 ```bash
-# Установка зависимостей
 npm install
-
-# Режим разработки (http://localhost:5173)
-npm run dev
-
-# Проверка типов и production-сборка
+npm run dev      # http://localhost:5173
 npm run build
-
-# Просмотр production-сборки
 npm run preview
-
-# Линтинг
 npm run lint
 ```
 
-### Точка входа
-
-1. `index.html` — корневой HTML, `lang="ru"`, favicon `/logo.png`.
-2. `src/main.tsx` — монтирует `<App />` в `#root` внутри `StrictMode`.
-3. `src/App.tsx` — `BrowserRouter` и дерево маршрутов.
+Точка входа: `index.html` → `main.tsx` → `App.tsx`.
 
 ---
 
 ## Структура проекта
 
 ```
-tennis_boom/
-├── public/
-│   └── logo.png               # Логотип магазина (favicon + компонент Logo)
-├── documents/
-│   └── PROJECT_DOCUMENTATION.md
-├── src/
-│   ├── main.tsx
-│   ├── App.tsx
-│   ├── index.css
-│   │
-│   ├── content/               # Контент товаров (источник каталога)
-│   │   └── products/
-│   │       └── {slug}/
-│   │           ├── product.json
-│   │           └── *.jpg      # Изображения товара
-│   │
-│   ├── pages/                 # Страницы (feature-based)
-│   │   ├── HomePage/
-│   │   ├── ProductsPage/
-│   │   ├── ProductDetailPage/
-│   │   ├── CartPage/
-│   │   ├── FavoritesPage/
-│   │   ├── UserPage/
-│   │   └── NotFoundPage/
-│   │
-│   ├── components/
-│   │   ├── layout/            # AppLayout, Header, Footer, Logo, StoreName
-│   │   ├── product/           # ProductCard, ProductFilter, CartItemRow, …
-│   │   ├── icons/             # Иконки преимуществ на главной
-│   │   └── ui/                # shadcn/ui примитивы
-│   │
-│   ├── hooks/                 # Обёртки над сторами и бизнес-логикой
-│   ├── stores/                # Zustand-сторы
-│   ├── data/                  # Агрегированные данные (products, homePageContent)
-│   ├── constants/             # routes, branding, catalog, filters
-│   ├── lib/                   # loadProducts, catalog, cn
-│   └── types/                 # TypeScript-типы
-│
-├── components.json
-├── vite.config.ts
-└── package.json
+src/
+├── content/products/{slug}/   # product.json + images
+├── pages/                     # HomePage, ProductsPage, …
+├── components/layout|product|ui/
+├── hooks/
+├── stores/
+├── data/
+├── constants/
+├── lib/
+└── types/
 ```
-
-### Соглашения по организации кода
-
-- **Страницы** — `PageName/PageName.tsx` + `index.ts` с реэкспортом.
-- **Сторы** — мутации состояния в `stores/`, вычисления и связка с UI — в `hooks/`.
-- **Константы** — маршруты, брендинг, ключи `localStorage` в `constants/`.
-- **Каталог** — контент в `content/products/`, сборка в `lib/loadProducts.ts`, публичный API — `data/products.ts`.
-- **Утилиты** — `formatPrice`, `filterProducts` в `lib/catalog.ts`.
 
 ---
 
-## Архитектура приложения
+## Архитектура
 
-Приложение построено по слоистой схеме: представление → хуки → сторы → данные.
+Слои: **Страницы/компоненты** → **Хуки** → **Сторы** → **Данные/localStorage**.
 
 ```mermaid
-flowchart TB
-    subgraph UI["Слой представления"]
-        Pages[Страницы]
-        Components[Компоненты]
-    end
-
-    subgraph Logic["Слой логики"]
-        Hooks[Хуки useCart, useFavorites, …]
-        Lib[lib/catalog — фильтрация, форматирование]
-        Loader[lib/loadProducts — сборка каталога]
-    end
-
-    subgraph State["Слой состояния"]
-        CartStore[cartStore]
-        FavStore[favoritesStore]
-        RatingsStore[ratingsStore]
-        UserStore[userStore]
-    end
-
-    subgraph Data["Слой данных"]
-        Content[content/products/*/product.json + images]
-        Products[data/products.ts]
-        HomeContent[data/homePageContent.ts]
-        LocalStorage[(localStorage)]
-    end
-
-    Pages --> Components
+flowchart LR
     Pages --> Hooks
-    Components --> Hooks
-    Hooks --> CartStore
-    Hooks --> FavStore
-    Hooks --> RatingsStore
-    Hooks --> UserStore
+    Hooks --> Stores
     Hooks --> Products
-    Hooks --> Lib
-    Lib --> Products
-    Content --> Loader
-    Loader --> Products
-    CartStore --> LocalStorage
-    FavStore --> LocalStorage
-    RatingsStore --> LocalStorage
-    UserStore --> LocalStorage
+    Stores --> LS[(localStorage)]
+    Content --> loadProducts --> Products
 ```
-
-### Поток данных при добавлении в корзину
-
-```mermaid
-sequenceDiagram
-    participant User as Пользователь
-    participant PC as ProductCard
-    participant Hook as useCart
-    participant Store as cartStore
-    participant LS as localStorage
-
-    User->>PC: Клик «В корзину»
-    PC->>Hook: addItem(productId)
-    Hook->>Store: addItem(productId)
-    Store->>Store: Обновить items[]
-    Store->>LS: persist (tennis-boom-cart)
-    PC->>User: toast.success(...)
-```
-
-### Layout
-
-`AppLayout` оборачивает все маршруты:
-
-- **Header** — логотип, навигация, бейджи корзины и избранного.
-- **`<main>`** — `<Outlet />` для контента страницы.
-- **Footer** — подвал сайта.
-- **Toaster** — глобальные уведомления Sonner.
 
 ---
 
 ## Маршрутизация
 
-Маршруты определены в `src/constants/routes.ts`:
-
-| Константа | Путь | Страница |
-|-----------|------|----------|
-| `ROUTES.HOME` | `/` | Главная |
-| `ROUTES.PRODUCTS` | `/products` | Каталог |
-| `ROUTES.PRODUCT_DETAIL` | `/products/:id` | Карточка товара |
-| `ROUTES.CART` | `/cart` | Корзина |
-| `ROUTES.FAVORITES` | `/favorites` | Избранное |
-| `ROUTES.USER` | `/user` | Профиль |
-| `ROUTES.NOT_FOUND` | `/404` | Страница ошибки |
-
-```ts
-getProductRoute('5') // → '/products/5'
-```
-
-Несуществующий товар на `ProductDetailPage` перенаправляется на `/404`. Любой неизвестный URL (`*`) также ведёт на `NotFoundPage`.
+См. `src/constants/routes.ts`. `getProductRoute(id)` → `/products/{id}`.
 
 ---
 
 ## Управление состоянием
 
-Используется **Zustand** с middleware **persist** для сохранения в `localStorage`.
+### cartStore
 
-### cartStore (`src/stores/cartStore.ts`)
+- `items: { productId, quantity }[]`
+- `addItem`, `removeItem`, `updateQuantity`, `clearCart`
 
-| Поле / метод | Тип | Описание |
-|--------------|-----|----------|
-| `items` | `CartItem[]` | `{ productId, quantity }` |
-| `addItem(id, qty?)` | — | Добавить или увеличить количество |
-| `removeItem(id)` | — | Удалить позицию |
-| `updateQuantity(id, qty)` | — | Обновить qty; при `qty <= 0` — удалить |
-| `clearCart()` | — | Очистить корзину |
+### favoritesStore
 
-### favoritesStore (`src/stores/favoritesStore.ts`)
+- `productIds[]`, `toggleFavorite`, `isFavorite`
 
-| Поле / метод | Описание |
-|--------------|----------|
-| `productIds` | Массив ID избранных товаров |
-| `toggleFavorite(id)` | Добавить / убрать |
-| `isFavorite(id)` | Проверка наличия |
-| `removeFavorite(id)` | Удалить из избранного |
+### ratingsStore
 
-### ratingsStore (`src/stores/ratingsStore.ts`)
+- `ratings: Record<id, 1|2|3|4|5>`
 
-| Поле / метод | Описание |
-|--------------|----------|
-| `ratings` | `Record<productId, ProductRating>` |
-| `setRating(id, rating)` | Сохранить оценку 1–5 |
-| `getRating(id)` | Получить оценку пользователя |
+### userStore
 
-### userStore (`src/stores/userStore.ts`)
-
-| Поле / метод | Описание |
-|--------------|----------|
-| `name`, `email`, `phone` | Профиль пользователя |
-| `setProfile(profile)` | Сохранить данные |
-| `resetProfile()` | Сброс к пустым значениям |
-
-### Разделение store / hook
-
-Сторы содержат минимальную логику мутаций. Хуки (`useCart`, `useFavorites`, …) добавляют вычисляемые значения, объединение с каталогом и стабильные колбэки для UI.
+- `name`, `email`, `phone`, `setProfile`
 
 ---
 
 ## Данные и каталог
 
-### Источник данных: `src/content/products/`
-
-Каждый товар — отдельная папка со slug-именем:
-
-```
-src/content/products/wilson-pro-staff-97/
-├── product.json
-├── 01.jpg
-└── 02.jpg
-```
-
-Пример `product.json`:
-
-```json
-{
-  "id": "1",
-  "slug": "wilson-pro-staff-97",
-  "name": "Wilson Pro Staff 97 ракетка",
-  "description": "…",
-  "price": 24990,
-  "category": "Ракетки",
-  "brand": "Wilson",
-  "rating": 4.8,
-  "inStock": true
-}
-```
-
-Опционально в `product.json` можно указать поле `images` — массив имён файлов для явного порядка галереи. Если поле отсутствует, изображения сортируются по имени файла.
-
-### Сборка каталога (`src/lib/loadProducts.ts`)
-
-Функция `loadProducts()` использует Vite `import.meta.glob`:
-
-- `../content/products/*/product.json` — метаданные (eager).
-- `../content/products/*/*.{jpg,jpeg,png,webp}` — изображения с `?url`.
-
-Товары сортируются по числовому `id`. При отсутствии изображений или несовпадении имён файлов выбрасывается ошибка на этапе сборки.
-
-### Публичный API (`src/data/products.ts`)
-
-```ts
-export const products = loadProducts()
-export const catalogMinPrice = Math.min(...)
-export const catalogMaxPrice = Math.max(...)
-```
-
-В каталоге **16 позиций** в категориях: Ракетки, Мячи, Одежда, Обувь, Аксессуары. Бренды: Wilson, Head, Babolat, Nike, Adidas, Yonex, Asics.
-
-### Контент главной (`src/data/homePageContent.ts`)
-
-- `homeFeatures` — 6 блоков «Почему выбирают нас».
-- `featuredProducts` — топ-4 товара по рейтингу.
-
-### Фильтрация (`src/lib/catalog.ts`)
-
-`filterProducts(productList, filters)` применяет условия (логическое И):
-
-1. Поиск по `name`, `category`, `brand`.
-2. Фильтр категории и бренда.
-3. Диапазон цены.
-4. Только в наличии (`inStockOnly`).
-
-Категории и бренды в фильтрах формируются динамически через `getUniqueFieldValues` из актуального каталога.
-
-Начальные фильтры: `src/constants/filters.ts` → `defaultProductFilters`.
-
-### Брендинг (`src/constants/branding.ts`)
-
-- `STORE_NAME`, `STORE_SLOGAN`, `CTA_SLOGAN`, `PROFILE_HEADER_SLOGAN`
-- `STORE_NAME_PARTS`, `CTA_SLOGAN_PARTS` — части текста с neon CSS-классами
+`loadProducts()` — `import.meta.glob` по `content/products/`.  
+`filterProducts()` — поиск, категория, бренд, цена, наличие (логическое И).
 
 ---
 
-## Страницы приложения
+## Страницы и компоненты
 
-### HomePage (`/`)
-
-1. **Hero-секция** — логотип, слоган, CTA в каталог и избранное.
-2. **Хиты каталога** — 4 карточки `ProductCard`.
-3. **Преимущества** — 6 карточек с иконками.
-4. **Нижний CTA** — ссылки на каталог и профиль.
-
-### ProductsPage (`/products`)
-
-- Панель `ProductFilter` + сетка `ProductCard`.
-- `useProductFilters` имитирует загрузку 300 мс (`isLoading`).
-
-### ProductDetailPage (`/products/:id`)
-
-- Галерея, описание, рейтинг, пользовательская оценка.
-- Добавление в корзину и избранное.
-
-### CartPage, FavoritesPage, UserPage, NotFoundPage
-
-См. исходники в `src/pages/` — поведение без изменений относительно предыдущей версии.
-
----
-
-## Компоненты
-
-### Layout (`src/components/layout/`)
-
-| Компонент | Назначение |
-|-----------|------------|
-| `AppLayout` | Header + Outlet + Footer + Toaster |
-| `Header` | Навигация, счётчики корзины/избранного |
-| `Footer` | Подвал |
-| `Logo` | Логотип `/logo.png` |
-| `StoreName` | Стилизованное название магазина |
-
-### Product (`src/components/product/`)
-
-| Компонент | Назначение |
-|-----------|------------|
-| `ProductCard` | Карточка (default / compact) |
-| `ProductFilter` | Фильтры каталога |
-| `ProductGallery` | Галерея на странице товара |
-| `CartItemRow` | Строка в корзине |
-| `RatingStars` | Звёзды рейтинга |
-| `QuantityControl` | Счётчик количества |
-| `EmptyState` | Пустое состояние |
-
-### UI (`src/components/ui/`)
-
-Используемые примитивы shadcn/ui:
-
-`Button`, `Card`, `Input`, `Form`, `Select`, `Slider`, `Checkbox`, `Badge`, `Breadcrumb`, `Separator`, `Skeleton`, `Label`, `Sonner`.
-
----
-
-## Хуки
-
-| Хук | Файл | Описание |
-|-----|------|----------|
-| `useProducts` | `hooks/useProducts.ts` | Массив `products` |
-| `useProductFilters` | `hooks/useProductFilters.ts` | Фильтры + `filteredProducts` + `isLoading` |
-| `useCart` | `hooks/useCart.ts` | Корзина с итогами |
-| `useFavorites` | `hooks/useFavorites.ts` | Избранное |
-| `useRatings` | `hooks/useRatings.ts` | Пользовательские оценки |
-
----
-
-## Типы данных
-
-Центральный реэкспорт: `src/types/index.ts`.
-
-```ts
-type CartItem = { productId: string; quantity: number }
-
-type Product = {
-  id: string
-  name: string
-  description: string
-  price: number
-  category: string
-  brand: string
-  images: string[]
-  rating: number
-  inStock: boolean
-}
-
-type ProductFilters = {
-  search: string
-  category: string
-  brand: string
-  minPrice: number
-  maxPrice: number
-  inStockOnly: boolean
-}
-
-type UserProfile = { name: string; email: string; phone: string }
-type ProductRating = 1 | 2 | 3 | 4 | 5
-```
-
----
-
-## Стилизация и UI
-
-### Tailwind CSS 4
-
-`@import "tailwindcss"` в `src/index.css`, плагин `@tailwindcss/vite`.
-
-### Тема «neon green»
-
-CSS-переменные `--neon-green-light`, `--neon-green-mid`, `--neon-green-deep` и утилиты `neon-border`, `neon-glow`, `neon-text-green-*`.
-
-### Доступность
-
-`aria-label`, `sr-only`, семантические теги, `focus-visible:ring`.
+| Страница | Путь | Ключевые компоненты |
+|----------|------|---------------------|
+| Главная | `/` | Hero, featured cards |
+| Каталог | `/products` | ProductFilter, ProductCard |
+| Товар | `/products/:id` | ProductGallery, RatingStars |
+| Корзина | `/cart` | CartItemRow, EmptyState |
+| Избранное | `/favorites` | ProductCard compact |
+| Профиль | `/user` | Form + Zod |
+| 404 | `*` | NotFoundPage |
 
 ---
 
 ## Персистентность (localStorage)
 
-Ключи в `src/constants/catalog.ts`:
-
-| Ключ | Стор | Поля |
-|------|------|------|
-| `tennis-boom-cart` | cartStore | `items` |
-| `tennis-boom-favorites` | favoritesStore | `productIds` |
-| `tennis-boom-ratings` | ratingsStore | `ratings` |
-| `tennis-boom-user` | userStore | `name`, `email`, `phone` |
-
----
-
-## Сборка и качество кода
-
-```json
-{
-  "dev": "vite",
-  "build": "tsc -b && vite build",
-  "lint": "eslint .",
-  "preview": "vite preview"
-}
-```
-
-TypeScript: `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`.
-
----
-
-## Общий алгоритм работы (рисунок 2.1)
-
-Общий алгоритм работы веб-приложения **«Vibe Boom Tennis»** состоит из следующей последовательности действий:
-
-- открытие веб-приложения в браузере;
-- загрузка каталога товаров и отображение главной страницы;
-- переход в каталог товаров;
-- поиск и фильтрация товаров по категории, бренду, цене и наличию;
-- просмотр карточки товара с описанием, изображениями и рейтингом из каталога;
-- добавление товара в корзину с выбором количества (если пользователь готов к покупке);
-- сохранение понравившегося товара в избранное (если пользователь хочет вернуться к нему позже);
-- просмотр списка избранных товаров и повторный переход к карточкам для сравнения;
-- открытие страницы корзины;
-- изменение количества товаров в корзине и просмотр итоговой стоимости;
-- открытие страницы профиля пользователя;
-- ввод и сохранение личных данных (имя, email, телефон);
-- возврат на главную страницу или в каталог через навигационное меню;
-- завершение работы с приложением.
-
-**Оформление блок-схемы** соответствует ГОСТ 19.701-90 и синтаксису Mermaid Flowchart:
-
-| Элемент | Форма в Mermaid | Назначение |
-|---------|-----------------|------------|
-| Терминатор | `([...])` stadium | Начало / конец |
-| Процесс | `[...]` | Действие пользователя или экран |
-| Решение | `{...}` diamond | Условие с ветвями «Да» / «Нет» |
-| Группа | `subgraph` | Логический этап алгоритма |
-
-Стили задаются через `classDef` (белая заливка, чёрный контур), рёбра — прямые (`curve: linear`).
-
-*Рисунок 2.1 – Общий алгоритм работы веб-приложения «Vibe Boom Tennis»*
-
-```mermaid
-%%{init: {
-  "theme": "base",
-  "flowchart": {
-    "curve": "linear",
-    "htmlLabels": true,
-    "diagramPadding": 24,
-    "nodeSpacing": 32,
-    "rankSpacing": 48,
-    "wrappingWidth": 220
-  },
-  "themeVariables": {
-    "fontFamily": "Times New Roman, serif",
-    "fontSize": "14px",
-    "background": "#ffffff",
-    "primaryColor": "#ffffff",
-    "primaryTextColor": "#000000",
-    "primaryBorderColor": "#000000",
-    "secondaryColor": "#ffffff",
-    "secondaryTextColor": "#000000",
-    "secondaryBorderColor": "#000000",
-    "tertiaryColor": "#ffffff",
-    "tertiaryTextColor": "#000000",
-    "tertiaryBorderColor": "#000000",
-    "lineColor": "#000000",
-    "textColor": "#000000",
-    "mainBkg": "#ffffff",
-    "nodeBorder": "#000000",
-    "clusterBkg": "#ffffff",
-    "clusterBorder": "#000000",
-    "titleColor": "#000000",
-    "edgeLabelBackground": "#ffffff"
-  }
-}}%%
-flowchart TB
-
-    subgraph init["Инициализация"]
-        direction TB
-        n01([Начало])
-        n02["2. Открытие веб-приложения в браузере"]
-        n03["3. Загрузка каталога и отображение главной страницы"]
-    end
-
-    subgraph catalog["Каталог и поиск"]
-        direction TB
-        n04["4. Переход в каталог товаров"]
-        n05["5. Поиск и фильтрация по категории,<br/>бренду, цене и наличию"]
-        n06["6. Просмотр карточки товара с описанием,<br/>изображениями и рейтингом"]
-    end
-
-    subgraph product["Действия с товаром"]
-        direction TB
-        d07{"7. Пользователь<br/>готов к покупке?"}
-        n08["7а. Добавление товара в корзину<br/>с выбором количества"]
-        d09{"8. Сохранить товар<br/>в избранное?"}
-        n10["8а. Сохранение товара в избранное"]
-        n11["8б. Просмотр избранного и переход<br/>к карточкам для сравнения"]
-    end
-
-    subgraph checkout["Корзина и профиль"]
-        direction TB
-        n12["9. Открытие страницы корзины"]
-        n13["10. Изменение количества товаров<br/>и просмотр итоговой стоимости"]
-        n14["11. Открытие страницы профиля пользователя"]
-        n15["12. Ввод и сохранение личных данных:<br/>имя, email, телефон"]
-    end
-
-    subgraph finish["Навигация и завершение"]
-        direction TB
-        n16["13. Возврат на главную или в каталог<br/>через навигационное меню"]
-        d17{"14. Завершить работу<br/>с приложением?"}
-        n18([Конец])
-    end
-
-    n01 --> n02 --> n03 --> n04 --> n05 --> n06
-
-    n06 --> d07
-    d07 -->|Да| n08
-    d07 -->|Нет| d09
-    n08 --> d09
-
-    d09 -->|Да| n10 --> n11 --> n06
-    d09 -->|Нет| n12
-
-    n12 --> n13 --> n14 --> n15 --> n16 --> d17
-    d17 -->|Нет| n03
-    d17 -->|Да| n18
-
-    classDef terminal fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000
-    classDef process fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
-    classDef decision fill:#ffffff,stroke:#000000,stroke-width:1.5px,color:#000000
-
-    class n01,n18 terminal
-    class n02,n03,n04,n05,n06,n08,n10,n11,n12,n13,n14,n15,n16 process
-    class d07,d09,d17 decision
-```
-
-### Пояснение к схеме
-
-| Этап | Шаги | Содержание |
-|------|------|------------|
-| Инициализация | 1–3 | Запуск приложения, загрузка каталога, главная страница |
-| Каталог и поиск | 4–6 | Переход в каталог, фильтрация, просмотр карточки товара |
-| Действия с товаром | 7–8 | Ветвление: покупка → корзина; избранное → сравнение → снова карточка |
-| Корзина и профиль | 9–12 | Корзина, итоговая сумма, профиль, сохранение данных |
-| Навигация и завершение | 13–14 | Возврат через меню; при отказе — цикл на главную, при согласии — конец |
-
-### Условные обозначения
-
-| Фигура | Обозначение Mermaid | Значение |
-|--------|---------------------|----------|
-| Стадион (овал) | `([текст])` | Начало / конец алгоритма |
-| Прямоугольник | `[текст]` | Процесс (действие или экран) |
-| Ромб | `{текст}` | Условие с ответами «Да» / «Нет» |
-| Пунктирная рамка | `subgraph` | Группировка шагов одного этапа |
-| Стрелка | `-->` | Направление перехода |
-
----
-
-## Алгоритм формирования корзины и расчёта итоговой стоимости (план для блок-схемы)
-
-Алгоритм формирования корзины и расчёта итоговой стоимости выполняется на странице корзины веб-приложения **«Vibe Boom Tennis»** после перехода пользователя в раздел «Корзина» из каталога, карточки товара или навигационного меню. Алгоритм начинается с момента открытия страницы корзины пользователем.
-
-Сначала программа загружает список позиций корзины из локального хранилища браузера. Затем для каждой сохранённой позиции выполняется поиск соответствующего товара в каталоге по идентификатору, после чего формируется полный список товаров с указанием наименования, цены за единицу и количества. Далее программа проверяет, содержит ли корзина хотя бы один товар. Если корзина пуста, на экран выводится сообщение о том, что товары не добавлены, и отображается предложение перейти в каталог; в этом случае расчёт итоговой стоимости не выполняется, и программа ожидает дальнейших действий пользователя до завершения работы с корзиной.
-
-Если в корзине есть товары, программа отображает их список на странице корзины. После этого для каждой позиции рассчитывается стоимость строки как произведение цены товара на его количество, и полученное значение выводится в интерфейсе рядом с соответствующей позицией. Затем программа вычисляет общее количество товаров в корзине как сумму количеств всех позиций и рассчитывает итоговую стоимость заказа как сумму стоимостей отдельных позиций. Рассчитанная итоговая сумма отображается в нижней части страницы корзины, а счётчик товаров в навигационной панели приложения обновляется.
-
-Далее программа переходит в режим ожидания действий пользователя и проверяет, было ли изменение состава корзины. Если пользователь не выполнял никаких действий, программа снова проверяет, продолжает ли пользователь работу с корзиной. Если пользователь решает покинуть страницу корзины или перейти в другой раздел приложения, алгоритм завершает свою работу.
-
-Если пользователь изменил состав корзины, программа определяет вид выполненного действия. При изменении количества товара программа проверяет, больше ли новое количество нуля. Если новое количество больше нуля, соответствующая позиция обновляется новым значением количества. Если новое количество равно нулю, позиция удаляется из корзины. Если пользователь нажимает кнопку удаления отдельной позиции, выбранный товар исключается из корзины. Если пользователь нажимает кнопку полной очистки корзины, из списка удаляются все позиции.
-
-После любого изменения состава корзины программа сохраняет обновлённый список позиций в локальном хранилище браузера. Затем повторно проверяется, остались ли в корзине товары. Если корзина стала пустой, программа отображает сообщение о пустой корзине и предлагает перейти в каталог. Если товары в корзине остались, программа заново рассчитывает стоимость каждой позиции, общее количество товаров и итоговую сумму заказа, после чего обновляет отображаемые на экране значения.
-
-После пересчёта программа снова проверяет, продолжает ли пользователь работу с корзиной. Если пользователь изменяет количество, удаляет позиции или очищает корзину, выполнение возвращается к проверке изменения состава корзины. Если пользователь завершает работу с корзиной и переходит в другой раздел приложения, алгоритм завершает свою работу.
-
----
-
-## Глава 3 — Программное конструирование (текст для отчёта)
-
-### 3.2 Описание программной реализации
-
-Программа реализована на основе функциональной парадигмы программирования.
-
-Функция **«App»** является основной функцией приложения. В ней настраивается маршрутизация между страницами и выполняется отрисовка содержимого в зависимости от адреса страницы, на которой находится пользователь.
-
-Общий макет интерфейса (шапка с навигационным меню и область содержимого) реализован в **«AppLayout»** и подключается из **«App»**. Все реализованные функции представлены в таблице 3.1, реализация функций представлена в приложении А.
-
-**Таблица 3.1 – Функции**
-
-| Функция | Входные параметры | Описание | Возвращаемое значение |
-|---------|-------------------|----------|------------------------|
-| App | — | Настройка маршрутизации и отображение страниц в зависимости от адреса URL | JSX-разметка приложения |
-| AppLayout | — | Вывод шапки сайта с навигационным меню и области содержимого страницы | JSX-разметка макета |
-| loadProducts | — | Загрузка каталога товаров из файлов `product.json` и изображений | Массив товаров `Product[]` |
-| filterProducts | `productList`, `filters` | Фильтрация товаров по поиску, категории, бренду, цене и наличию | Массив отфильтрованных товаров |
-| useCart | — | Получение состава корзины, итоговой суммы, добавление и изменение позиций | Объект с данными и методами корзины |
-| useFavorites | — | Проверка товара в избранном, добавление и удаление из списка | Объект с `productIds`, `toggleFavorite` |
-| useProductFilters | — | Управление параметрами фильтрации и получение отфильтрованного каталога | Объект с `filters`, `filteredProducts` |
-| useUserStore.setProfile | `UserProfile` | Сохранение имени, email и телефона пользователя в `localStorage` | — |
-| getProductRoute | `id` | Формирование пути для перехода на страницу товара | Строка с адресом страницы |
+| Ключ | Store |
+|------|-------|
+| `tennis-boom-cart` | cartStore |
+| `tennis-boom-favorites` | favoritesStore |
+| `tennis-boom-ratings` | ratingsStore |
+| `tennis-boom-user` | userStore |
+| `tennis-boom-theme` | themeStore |
 
 ---
 
 ## Расширение проекта
 
-### Добавление товара
+### Новый товар
 
-1. Создать папку `src/content/products/{slug}/`.
-2. Добавить `product.json` с уникальным `id`.
-3. Положить изображения `.jpg` / `.png` / `.webp` в ту же папку.
-4. Перезапустить dev-сервер или выполнить `npm run build`.
+1. `src/content/products/{slug}/product.json` с уникальным `id`.
+2. Изображения в ту же папку.
+3. `npm run dev` или `npm run build`.
 
-Категории и бренды в фильтрах обновятся автоматически.
+### Новая страница
 
-### Подключение API
-
-Заменить `loadProducts()` на асинхронную загрузку в `useProducts` (React Query / fetch).
-
-### Добавление страницы
-
-1. `src/pages/NewPage/NewPage.tsx` + `index.ts`.
-2. Константа в `ROUTES`.
-3. `<Route>` в `App.tsx`.
+1. `src/pages/NewPage/`
+2. Константа в `ROUTES`
+3. `<Route>` в `App.tsx`
 
 ---
 
-## Диаграмма навигации
-
-```mermaid
-flowchart LR
-    Home[Главная] --> Products[Каталог]
-    Home --> Favorites[Избранное]
-    Home --> User[Профиль]
-    Products --> Detail[Товар]
-    Detail --> Cart[Корзина]
-    Products --> Cart
-    Header[Header] --> Home
-    Header --> Products
-    Header --> Cart
-    Header --> Favorites
-    Header --> User
-```
-
----
-
-*Документация для репозитория `vibe-boom-tennis`. Обновлена после рефакторинга: контентный каталог, удаление неиспользуемых файлов.*
+*Документация проекта Vibe Boom Tennis. Раздел для новичков — полное руководство по пониманию кода.*
